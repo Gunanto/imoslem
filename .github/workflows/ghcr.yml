@@ -10,6 +10,8 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      IMAGE_OWNER: ${{ toLower(github.repository_owner) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,6 +32,6 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/gunanto/muslim:latest
+          tags: ghcr.io/${{ env.IMAGE_OWNER }}/muslim:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
