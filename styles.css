@@ -368,6 +368,54 @@ button.secondary {
     color: var(--ink);
 }
 
+.ayah-list {
+    display: grid;
+    gap: 12px;
+}
+
+.ayah-item {
+    border: 1px solid var(--stroke);
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: #fffdf8;
+}
+
+.ayah-item.active {
+    border-color: #0f7b63;
+    box-shadow: 0 8px 20px rgba(15, 123, 99, 0.12);
+}
+
+.ayah-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.ayah-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ayah-play {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: #0f7b63;
+    color: #fff;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.ayah-play.ghost {
+    background: transparent;
+    border-color: #cfd7d4;
+    color: var(--ink);
+}
+
 .output.reading-mode {
     background: #fffaf0;
     font-size: 18px;

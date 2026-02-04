@@ -1,5 +1,5 @@
 const BASE_URL = "https://api.myquran.com/v3";
-const CACHE_PREFIX = "sm-cache:";
+const CACHE_PREFIX = "sm-cache:v2:";
 const DEFAULT_CACHE_SECONDS = 300;
 
 const el = (id) => document.getElementById(id);
@@ -74,7 +74,17 @@ const pickValue = (...values) =>
     (value) => value !== undefined && value !== null && value !== "",
   ) ?? "";
 
-const unwrapData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
+const unwrapData = (payload) => {
+  let current = payload;
+  for (let i = 0; i < 4; i += 1) {
+    if (current && typeof current === "object" && "data" in current) {
+      current = current.data;
+      continue;
+    }
+    break;
+  }
+  return current ?? payload;
+};
 
 const normalizeAyahData = (raw) => {
   const data = unwrapData(raw) || {};
@@ -137,6 +147,48 @@ const renderQuranAyah = (data) => {
   `;
 };
 
+const renderAyahList = (items) => {
+  if (!items || !items.length) return "Data tidak tersedia.";
+  return `
+    <div class="ayah-list">
+      ${items
+        .map((item, index) => {
+          const ayah = normalizeAyahData(item);
+          const arab = ayah.arab || "-";
+          const translation = ayah.translation || "-";
+          return `
+            <div class="ayah-item" data-index="${index}">
+              <div class="ayah-header">
+                <span>QS ${escapeHtml(ayah.surah_number)}:${escapeHtml(
+                  ayah.ayah_number,
+                )}</span>
+                <div class="ayah-actions">
+                  <button class="ayah-play" data-action="play" data-index="${index}">
+                    Putar
+                  </button>
+                </div>
+              </div>
+              <div class="arab">${escapeHtml(arab)}</div>
+              <div class="translation">${escapeHtml(translation)}</div>
+              <div class="meta">
+                <span class="pill-inline">Juz: ${escapeHtml(
+                  ayah.meta?.juz ?? "-",
+                )}</span>
+                <span class="pill-inline">Page: ${escapeHtml(
+                  ayah.meta?.page ?? "-",
+                )}</span>
+                <span class="pill-inline">Ruku: ${escapeHtml(
+                  ayah.meta?.ruku ?? "-",
+                )}</span>
+              </div>
+            </div>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+};
+
 const renderHadisDetail = (data) => {
   if (!data) return "Data tidak tersedia.";
   return `
@@ -179,6 +231,32 @@ const applyAudio = (audioValue) => {
   } else {
     audioEl.removeAttribute("src");
     audioEl.style.display = "none";
+  }
+};
+
+const setActiveAyah = (index) => {
+  const container = el("quran-range-output");
+  if (!container) return;
+  container.querySelectorAll(".ayah-item").forEach((item) => {
+    item.classList.toggle("active", item.dataset.index === String(index));
+  });
+};
+
+const playAyahIndex = (index, auto = true) => {
+  const item = state.quranRange[index];
+  if (!item) return;
+  const audioUrl = getAudioUrl(item.audio_url || item.audio);
+  const ayah = normalizeAyahData(item);
+  state.quranIndex = index;
+  state.quranAuto = auto;
+  if (ayah.surah_number) el("quran-surah").value = ayah.surah_number;
+  if (ayah.ayah_number) el("quran-ayah").value = ayah.ayah_number;
+  applyAudio(audioUrl);
+  setActiveAyah(index);
+  if (audioUrl) {
+    el("quran-audio")
+      .play()
+      .catch(() => {});
   }
 };
 
@@ -235,11 +313,25 @@ const fetchJson = async (path, options = {}) => {
 
 const state = {
   sholatLocations: [],
+  quranRange: [],
+  quranIndex: -1,
+  quranAuto: false,
 };
 
 // Mode baca toggles
 el("quran-read-mode").addEventListener("click", () => {
   el("quran-ayah-output").classList.toggle("reading-mode");
+  el("quran-range-output").classList.toggle("reading-mode");
+});
+
+const quranAudio = el("quran-audio");
+quranAudio.addEventListener("ended", () => {
+  if (!state.quranAuto) return;
+  playAyahIndex(state.quranIndex + 1, true);
+});
+
+quranAudio.addEventListener("pause", () => {
+  if (!quranAudio.ended) state.quranAuto = false;
 });
 
 el("hadis-read-mode").addEventListener("click", () => {
@@ -403,7 +495,9 @@ el("quran-load").addEventListener("click", async () => {
           const surah = btn.dataset.surah;
           el("quran-surah").value = surah;
           setOutput("quran-ayah-output", "Memuat detail surah...");
-          const detail = await fetchJson(`/quran/${surah}`);
+          const detail = await fetchJson(`/quran/${surah}`, {
+            cacheSeconds: 0,
+          });
           const d = unwrapData(detail);
           const html = `
             <div class="title">${escapeHtml(d.name_latin || "")}</div>
@@ -420,6 +514,10 @@ el("quran-load").addEventListener("click", async () => {
           `;
           setHtml("quran-ayah-output", html);
           applyAudio(d.audio_url || d.audio);
+          if (d.number_of_ayahs) {
+            el("quran-ayah-from").value = "1";
+            el("quran-ayah-to").value = String(d.number_of_ayahs);
+          }
         });
       });
   } catch (err) {
@@ -441,14 +539,62 @@ el("quran-ayah-load").addEventListener("click", async () => {
   const surah = el("quran-surah").value.trim();
   const ayah = el("quran-ayah").value.trim();
   if (!surah || !ayah) return;
+  state.quranAuto = false;
   setLoading("quran-ayah-output");
   try {
-    const data = await fetchJson(`/quran/${surah}/${ayah}`);
+    const data = await fetchJson(`/quran/${surah}/${ayah}`, {
+      cacheSeconds: 0,
+    });
     const ayahData = unwrapData(data);
     setHtml("quran-ayah-output", renderQuranAyah(ayahData));
     applyAudio(ayahData?.audio_url || ayahData?.audio);
   } catch (err) {
     setOutput("quran-ayah-output", `Error: ${err.message}`);
+  }
+});
+
+el("quran-ayah-range").addEventListener("click", async () => {
+  const surah = el("quran-surah").value.trim();
+  const fromRaw = el("quran-ayah-from").value.trim();
+  const toRaw = el("quran-ayah-to").value.trim();
+  if (!surah || !fromRaw || !toRaw) {
+    setOutput("quran-range-output", "Lengkapi surah dan range ayat.");
+    return;
+  }
+  let from = Number.parseInt(fromRaw, 10);
+  let to = Number.parseInt(toRaw, 10);
+  if (Number.isNaN(from) || Number.isNaN(to)) {
+    setOutput("quran-range-output", "Range ayat harus berupa angka.");
+    return;
+  }
+  if (from > to) [from, to] = [to, from];
+  setLoading("quran-range-output");
+  state.quranRange = [];
+  state.quranIndex = -1;
+  state.quranAuto = false;
+  try {
+    const requests = [];
+    for (let i = from; i <= to; i += 1) {
+      requests.push(
+        fetchJson(`/quran/${surah}/${i}`, {
+          cacheSeconds: 0,
+        }),
+      );
+    }
+    const results = await Promise.all(requests);
+    const items = results.map((res) => unwrapData(res));
+    state.quranRange = items;
+    setHtml("quran-range-output", renderAyahList(items));
+    el("quran-range-output")
+      .querySelectorAll(".ayah-play")
+      .forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const index = Number(btn.dataset.index || "0");
+          playAyahIndex(index, true);
+        });
+      });
+  } catch (err) {
+    setOutput("quran-range-output", `Error: ${err.message}`);
   }
 });
 

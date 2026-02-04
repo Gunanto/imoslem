@@ -172,11 +172,23 @@
                             <button id="quran-ayah-load">Ambil</button>
                         </div>
                         <div class="row">
+                            <input
+                                id="quran-ayah-from"
+                                placeholder="Dari ayat"
+                            />
+                            <input
+                                id="quran-ayah-to"
+                                placeholder="Sampai ayat"
+                            />
+                            <button id="quran-ayah-range">Muat Range</button>
+                        </div>
+                        <div class="row">
                             <button id="quran-read-mode" class="secondary">
                                 Mode Baca
                             </button>
                         </div>
                         <div id="quran-ayah-output" class="output"></div>
+                        <div id="quran-range-output" class="output"></div>
                         <audio id="quran-audio" controls class="audio"></audio>
                     </div>
                 </div>
