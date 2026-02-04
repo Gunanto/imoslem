@@ -65,18 +65,74 @@ const renderJadwal = (jadwalObj) => {
     .join("");
 };
 
+const pickText = (...values) =>
+  values.find((value) => typeof value === "string" && value.trim() !== "") ||
+  "";
+
+const pickValue = (...values) =>
+  values.find(
+    (value) => value !== undefined && value !== null && value !== "",
+  ) ?? "";
+
+const unwrapData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
+
+const normalizeAyahData = (raw) => {
+  const data = unwrapData(raw) || {};
+  const ayah =
+    data.ayah ||
+    data.ayat ||
+    (Array.isArray(data.ayahs) ? data.ayahs[0] : null) ||
+    (Array.isArray(data.ayats) ? data.ayats[0] : null) ||
+    data;
+
+  return {
+    surah_number: pickValue(
+      ayah.surah_number,
+      ayah.surah?.number,
+      data.surah_number,
+      data.surah?.number,
+    ),
+    ayah_number: pickValue(
+      ayah.ayah_number,
+      ayah.number,
+      ayah.no,
+      data.ayah_number,
+    ),
+    arab: pickText(
+      ayah.arab,
+      ayah.arabic,
+      ayah.text?.ar,
+      ayah.text_ar,
+      data.arab,
+      data.text?.ar,
+    ),
+    translation: pickText(
+      ayah.translation,
+      ayah.text?.id,
+      ayah.terjemah,
+      ayah.id,
+      data.translation,
+      data.text?.id,
+    ),
+    meta: ayah.meta || data.meta || {},
+  };
+};
+
 const renderQuranAyah = (data) => {
   if (!data) return "Data tidak tersedia.";
+  const ayah = normalizeAyahData(data);
+  const arab = ayah.arab || "-";
+  const translation = ayah.translation || "-";
   return `
-    <div class="title">QS ${escapeHtml(data.surah_number)}:${escapeHtml(
-      data.ayah_number,
+    <div class="title">QS ${escapeHtml(ayah.surah_number)}:${escapeHtml(
+      ayah.ayah_number,
     )}</div>
-    <div class="arab">${escapeHtml(data.arab)}</div>
-    <div class="translation">${escapeHtml(data.translation)}</div>
+    <div class="arab">${escapeHtml(arab)}</div>
+    <div class="translation">${escapeHtml(translation)}</div>
     <div class="meta">
-      <span class="pill-inline">Juz: ${escapeHtml(data.meta?.juz ?? "-")}</span>
-      <span class="pill-inline">Page: ${escapeHtml(data.meta?.page ?? "-")}</span>
-      <span class="pill-inline">Ruku: ${escapeHtml(data.meta?.ruku ?? "-")}</span>
+      <span class="pill-inline">Juz: ${escapeHtml(ayah.meta?.juz ?? "-")}</span>
+      <span class="pill-inline">Page: ${escapeHtml(ayah.meta?.page ?? "-")}</span>
+      <span class="pill-inline">Ruku: ${escapeHtml(ayah.meta?.ruku ?? "-")}</span>
     </div>
   `;
 };
@@ -92,6 +148,38 @@ const renderHadisDetail = (data) => {
       <span class="pill-inline">Takhrij: ${escapeHtml(data.takhrij ?? "-")}</span>
     </div>
   `;
+};
+
+const getAudioUrl = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) {
+    const hit = value.find((item) => typeof item === "string");
+    return hit || "";
+  }
+  if (typeof value === "object") {
+    const values = Object.values(value);
+    for (const item of values) {
+      if (typeof item === "string") return item;
+      if (Array.isArray(item)) {
+        const hit = item.find((v) => typeof v === "string");
+        if (hit) return hit;
+      }
+    }
+  }
+  return "";
+};
+
+const applyAudio = (audioValue) => {
+  const audioEl = el("quran-audio");
+  const audioUrl = getAudioUrl(audioValue);
+  if (audioUrl) {
+    audioEl.src = audioUrl;
+    audioEl.style.display = "block";
+  } else {
+    audioEl.removeAttribute("src");
+    audioEl.style.display = "none";
+  }
 };
 
 const getCache = (key, ttlSeconds) => {
@@ -316,7 +404,7 @@ el("quran-load").addEventListener("click", async () => {
           el("quran-surah").value = surah;
           setOutput("quran-ayah-output", "Memuat detail surah...");
           const detail = await fetchJson(`/quran/${surah}`);
-          const d = detail.data || detail;
+          const d = unwrapData(detail);
           const html = `
             <div class="title">${escapeHtml(d.name_latin || "")}</div>
             <div class="meta">${escapeHtml(d.translation || "")} • ${escapeHtml(
@@ -324,10 +412,14 @@ el("quran-load").addEventListener("click", async () => {
             )}</div>
             ${renderKeyValue([
               ["Jumlah Ayat", d.number_of_ayahs],
-              ["Audio Surah", d.audio_url ? "Tersedia" : "Tidak"],
+              [
+                "Audio Surah",
+                getAudioUrl(d.audio_url || d.audio) ? "Tersedia" : "Tidak",
+              ],
             ])}
           `;
           setHtml("quran-ayah-output", html);
+          applyAudio(d.audio_url || d.audio);
         });
       });
   } catch (err) {
@@ -352,16 +444,9 @@ el("quran-ayah-load").addEventListener("click", async () => {
   setLoading("quran-ayah-output");
   try {
     const data = await fetchJson(`/quran/${surah}/${ayah}`);
-    setHtml("quran-ayah-output", renderQuranAyah(data.data || data));
-    const audio = data.data?.audio_url;
-    const audioEl = el("quran-audio");
-    if (audio) {
-      audioEl.src = audio;
-      audioEl.style.display = "block";
-    } else {
-      audioEl.removeAttribute("src");
-      audioEl.style.display = "none";
-    }
+    const ayahData = unwrapData(data);
+    setHtml("quran-ayah-output", renderQuranAyah(ayahData));
+    applyAudio(ayahData?.audio_url || ayahData?.audio);
   } catch (err) {
     setOutput("quran-ayah-output", `Error: ${err.message}`);
   }
