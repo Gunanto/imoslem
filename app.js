@@ -32,7 +32,12 @@ const state = {
 function setTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   const isDark = theme === "dark";
-  themeToggle.textContent = isDark ? "Mode Terang" : "Mode Gelap";
+  const label = document.getElementById("themeLabel");
+  const icon = document.getElementById("themeIcon");
+
+  if (label) label.textContent = isDark ? "Mode Terang" : "Mode Gelap";
+  if (icon) icon.textContent = isDark ? "☀️" : "🌙";
+
   themeToggle.setAttribute("aria-pressed", String(isDark));
   localStorage.setItem("theme", theme);
   state.theme = theme;
@@ -78,7 +83,11 @@ function renderLoading(target, text = "Memuat data...") {
 }
 
 function renderError(target, message) {
-  target.innerHTML = `<div class="empty">${message}</div>`;
+  target.innerHTML = `
+    <div class="empty" style="border-style: solid; border-color: rgba(239, 68, 68, 0.2); color: #ef4444; background: rgba(239, 68, 68, 0.05);">
+        ${message}
+    </div>
+  `;
 }
 
 function createAyatCard(data) {
@@ -305,10 +314,9 @@ quranForm.addEventListener("submit", async (event) => {
         <div class="ayah">
           <div class="arabic">${item.arab}</div>
           <div class="translation">${item.translation}</div>
-          ${
-            item.audio_url
-              ? `<audio class="audio" controls src="${item.audio_url}"></audio>`
-              : `<div class="empty">Audio tidak tersedia.</div>`
+          ${item.audio_url
+            ? `<audio class="audio" controls src="${item.audio_url}"></audio>`
+            : `<div class="empty">Audio tidak tersedia.</div>`
           }
           <div class="meta">
             <span>Surah ${item.surah_number}</span>
@@ -373,9 +381,18 @@ function renderBatchPlayer() {
       </div>
       <audio id="batchAudio" class="audio" controls src="${current.audio_url || ""}"></audio>
       <div class="batch-controls">
-        <button class="btn primary" id="batchPlay">Play</button>
-        <button class="btn ghost" id="batchPause">Pause</button>
-        <button class="btn ghost" id="batchStop">Stop</button>
+        <button class="btn primary" id="batchPlay">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            Play
+        </button>
+        <button class="btn ghost" id="batchPause">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pause"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>
+            Pause
+        </button>
+        <button class="btn ghost" id="batchStop">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>
+            Stop
+        </button>
       </div>
     </div>
   `;
@@ -487,7 +504,10 @@ function createHadisList(items) {
       <div class="hadis-item">
         <strong>ID Hadis #${item.id}</strong>
         <p>${item.text || "Tidak ada ringkasan."}</p>
-        <button class="btn ghost" data-id="${item.id}">Lihat Detail</button>
+        <button class="btn ghost" data-id="${item.id}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+            Lihat Detail
+        </button>
       </div>
     `,
     )

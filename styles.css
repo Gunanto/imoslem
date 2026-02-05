@@ -2,30 +2,43 @@
 
 :root {
     color-scheme: light;
-    --bg: #f3f7f5;
+    --bg: #f8faf9;
     --bg-elev: #ffffff;
-    --text: #0c1f18;
-    --muted: #546a62;
-    --accent: #0c5132;
-    --accent-2: #1f7a50;
-    --accent-3: #0a2f1f;
-    --ring: rgba(12, 81, 50, 0.35);
-    --shadow: 0 20px 60px rgba(10, 32, 22, 0.18);
-    --border: rgba(12, 45, 32, 0.12);
+    --text: #0a1a15;
+    --muted: #64748b;
+    --accent: #10b981;
+    --accent-2: #059669;
+    --accent-3: #064e3b;
+    --accent-glow: rgba(16, 185, 129, 0.2);
+    --ring: rgba(16, 185, 129, 0.25);
+    --shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 20px 25px -5px rgba(0, 0, 0, 0.05);
+    --border: rgba(15, 70, 48, 0.08);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --transition: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme="dark"] {
     color-scheme: dark;
-    --bg: #06150f;
-    --bg-elev: #0b2118;
-    --text: #eef6f0;
-    --muted: #b3c5bc;
-    --accent: #2bd48a;
-    --accent-2: #1a8f5f;
-    --accent-3: #0e3b27;
-    --ring: rgba(43, 212, 138, 0.35);
-    --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
-    --border: rgba(199, 243, 220, 0.15);
+    --bg: #020617;
+    --bg-elev: #0f172a;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #34d399;
+    --accent-2: #10b981;
+    --accent-3: #d1fae5;
+    --accent-glow: rgba(52, 211, 153, 0.15);
+    --ring: rgba(52, 211, 153, 0.25);
+    --shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.4),
+        0 25px 40px -5px rgba(0, 0, 0, 0.4);
+    --border: rgba(148, 163, 184, 0.1);
+    --glass-bg: rgba(15, 23, 42, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -36,18 +49,16 @@
 
 body {
     font-family: "Space Grotesk", system-ui, sans-serif;
-    background:
-        radial-gradient(
-            circle at top left,
-            rgba(12, 81, 50, 0.18),
-            transparent 55%
-        ),
-        var(--bg);
+    background-color: var(--bg);
+    background-image:
+        radial-gradient(circle at 0% 0%, var(--accent-glow) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, var(--accent-glow) 0%, transparent 50%);
     color: var(--text);
     min-height: 100vh;
     position: relative;
     line-height: 1.6;
     overflow-x: hidden;
+    transition: background-color 0.4s var(--transition), color 0.4s var(--transition);
 }
 
 .bg-orb {
@@ -79,11 +90,9 @@ body {
         linear-gradient(rgba(12, 81, 50, 0.06) 1px, transparent 1px),
         linear-gradient(90deg, rgba(12, 81, 50, 0.06) 1px, transparent 1px);
     background-size: 80px 80px;
-    mask-image: radial-gradient(
-        circle at center,
-        rgba(0, 0, 0, 0.8),
-        transparent 70%
-    );
+    mask-image: radial-gradient(circle at center,
+            rgba(0, 0, 0, 0.8),
+            transparent 70%);
     pointer-events: none;
     z-index: 0;
 }
@@ -110,16 +119,26 @@ body {
 }
 
 .logo {
-    width: 56px;
-    height: 56px;
-    border-radius: 18px;
-    background: linear-gradient(140deg, var(--accent), var(--accent-2));
+    width: 60px;
+    height: 60px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
     color: #ffffff;
     display: grid;
     place-items: center;
-    font-weight: 700;
+    font-weight: 800;
+    font-size: 1.2rem;
     letter-spacing: 1px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 10px 20px var(--accent-glow);
+    position: relative;
+}
+
+.logo::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: 17px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .brand-text h1 {
@@ -181,14 +200,12 @@ body {
 }
 
 .hero-card {
-    background: linear-gradient(
-        160deg,
-        rgba(12, 81, 50, 0.12),
-        rgba(12, 81, 50, 0.04)
-    );
-    border: 1px solid var(--border);
-    padding: 24px;
-    border-radius: 24px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    padding: 32px;
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow);
 }
 
@@ -234,12 +251,20 @@ body {
 .card {
     background: var(--bg-elev);
     border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 24px;
+    border-radius: var(--radius-lg);
+    padding: 32px;
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
+    transition: transform 0.3s var(--transition), box-shadow 0.3s var(--transition);
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 10px 25px -5px rgba(0, 0, 0, 0.1),
+        0 25px 50px -12px rgba(0, 0, 0, 0.1);
 }
 
 .card-header h3 {
@@ -269,58 +294,49 @@ label {
     color: var(--muted);
 }
 
-input {
-    padding: 12px 14px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text);
-    font-size: 1rem;
-    transition:
-        border 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
+input,
 select {
-    padding: 12px 14px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: transparent;
+    padding: 14px 18px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--border);
+    background: var(--bg);
     color: var(--text);
     font-size: 1rem;
-    transition:
-        border 0.2s ease,
-        box-shadow 0.2s ease;
+    font-family: inherit;
+    transition: all 0.2s var(--transition);
 }
 
-input:focus {
-    outline: none;
-    border-color: var(--accent-2);
-    box-shadow: 0 0 0 3px var(--ring);
-}
-
+input:focus,
 select:focus {
     outline: none;
-    border-color: var(--accent-2);
-    box-shadow: 0 0 0 3px var(--ring);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--ring);
+    background: var(--bg-elev);
 }
 
 .btn {
-    padding: 12px 16px;
-    border-radius: 14px;
+    padding: 14px 24px;
+    border-radius: var(--radius-md);
     border: none;
     font-weight: 600;
     cursor: pointer;
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s var(--transition);
 }
 
 .btn.primary {
-    background: linear-gradient(140deg, var(--accent), var(--accent-2));
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
     color: #ffffff;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.btn.primary:hover {
+    box-shadow: 0 8px 20px var(--accent-glow);
+    filter: brightness(1.1);
 }
 
 .btn.ghost {
@@ -367,15 +383,29 @@ select:focus {
 .skeleton {
     position: relative;
     overflow: hidden;
-    border-radius: 16px;
-    background: linear-gradient(
-        90deg,
-        rgba(12, 81, 50, 0.08),
-        rgba(12, 81, 50, 0.16),
-        rgba(12, 81, 50, 0.08)
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.2s ease-in-out infinite;
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 24px;
+}
+
+.skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.08),
+            transparent);
+    animation: shimmer 2s infinite;
+}
+
+[data-theme="dark"] .skeleton::after {
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.03),
+            transparent);
 }
 
 .skeleton-line {
@@ -391,6 +421,7 @@ select:focus {
     0% {
         background-position: 100% 0;
     }
+
     100% {
         background-position: -100% 0;
     }
@@ -398,19 +429,44 @@ select:focus {
 
 .ayah {
     display: grid;
-    gap: 12px;
+    gap: 20px;
+    padding: 24px;
+    background: var(--bg-elev);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    animation: fadeIn 0.5s var(--transition) both;
 }
 
 .arabic {
     font-family: "Amiri", serif;
-    font-size: 1.8rem;
+    font-size: 2.2rem;
     text-align: right;
     direction: rtl;
+    line-height: 1.8;
+    color: var(--accent-2);
+}
+
+[data-theme="dark"] .arabic {
+    color: var(--accent);
 }
 
 .translation {
-    color: var(--muted);
-    font-size: 1rem;
+    color: var(--text);
+    font-size: 1.1rem;
+    line-height: 1.7;
+    opacity: 0.9;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .audio {
@@ -418,12 +474,13 @@ select:focus {
 }
 
 .batch-player {
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 16px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: 32px;
     display: grid;
-    gap: 12px;
-    background: rgba(12, 81, 50, 0.06);
+    gap: 20px;
+    background: var(--accent-glow);
+    animation: fadeIn 0.4s var(--transition);
 }
 
 .batch-controls {
@@ -445,11 +502,25 @@ select:focus {
 
 .hadis-item {
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 14px;
+    border-radius: var(--radius-md);
+    padding: 20px;
     display: grid;
-    gap: 10px;
-    background: rgba(12, 81, 50, 0.05);
+    gap: 16px;
+    background: var(--bg-elev);
+    transition: all 0.2s var(--transition);
+    animation: fadeIn 0.4s var(--transition) both;
+}
+
+.hadis-item:hover {
+    border-color: var(--accent);
+    background: var(--bg);
+}
+
+.hadis-item strong {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
 }
 
 .hadis-item p {
