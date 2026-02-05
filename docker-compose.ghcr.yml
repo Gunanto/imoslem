@@ -1,8 +1,0 @@
-services:
-  muslim-app:
-    # Replace 'gunanto' with your actual GitHub username if different.
-    # Ensure the image name matches what is pushed by the GitHub Action.
-    image: ghcr.io/gunanto/muslim:latest
-    ports:
-      - "8080:80"
-    restart: always

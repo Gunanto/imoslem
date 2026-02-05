@@ -1,754 +1,611 @@
-const BASE_URL = "https://api.myquran.com/v3";
-const CACHE_PREFIX = "sm-cache:v2:";
-const DEFAULT_CACHE_SECONDS = 300;
+const API_BASE = "https://api.myquran.com/v3";
 
-const el = (id) => document.getElementById(id);
-const setOutput = (id, data) => {
-  const node = el(id);
-  node.classList.remove("loading");
-  node.textContent = data;
-};
-
-const setLoading = (id) => {
-  const node = el(id);
-  node.classList.add("loading");
-  node.textContent = "Memuat...";
-};
-
-const setList = (id, html) => {
-  const node = el(id);
-  node.classList.remove("loading");
-  node.innerHTML = html;
-};
-
-const setHtml = (id, html) => {
-  const node = el(id);
-  node.classList.remove("loading");
-  node.innerHTML = html;
-};
-
-const escapeHtml = (value) =>
-  String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
-const renderKeyValue = (pairs) =>
-  `<div class="kv">${pairs
-    .map(
-      ([label, value]) =>
-        `<div class="label">${escapeHtml(label)}</div><div>${escapeHtml(value)}</div>`,
-    )
-    .join("")}</div>`;
-
-const renderJadwal = (jadwalObj) => {
-  const entries = Object.values(jadwalObj || {});
-  if (!entries.length) return "<div>Jadwal tidak tersedia.</div>";
-  return entries
-    .map((item) => {
-      return `<div class="card" style="margin-top:10px">
-        <div class="title">${escapeHtml(item.tanggal || "")}</div>
-        ${renderKeyValue([
-          ["Imsak", item.imsak],
-          ["Subuh", item.subuh],
-          ["Terbit", item.terbit],
-          ["Dhuha", item.dhuha],
-          ["Dzuhur", item.dzuhur],
-          ["Ashar", item.ashar],
-          ["Maghrib", item.maghrib],
-          ["Isya", item.isya],
-        ])}
-      </div>`;
-    })
-    .join("");
-};
-
-const pickText = (...values) =>
-  values.find((value) => typeof value === "string" && value.trim() !== "") ||
-  "";
-
-const pickValue = (...values) =>
-  values.find(
-    (value) => value !== undefined && value !== null && value !== "",
-  ) ?? "";
-
-const unwrapData = (payload) => {
-  let current = payload;
-  for (let i = 0; i < 4; i += 1) {
-    if (current && typeof current === "object" && "data" in current) {
-      current = current.data;
-      continue;
-    }
-    break;
-  }
-  return current ?? payload;
-};
-
-const normalizeAyahData = (raw) => {
-  const data = unwrapData(raw) || {};
-  const ayah =
-    data.ayah ||
-    data.ayat ||
-    (Array.isArray(data.ayahs) ? data.ayahs[0] : null) ||
-    (Array.isArray(data.ayats) ? data.ayats[0] : null) ||
-    data;
-
-  return {
-    surah_number: pickValue(
-      ayah.surah_number,
-      ayah.surah?.number,
-      data.surah_number,
-      data.surah?.number,
-    ),
-    ayah_number: pickValue(
-      ayah.ayah_number,
-      ayah.number,
-      ayah.no,
-      data.ayah_number,
-    ),
-    arab: pickText(
-      ayah.arab,
-      ayah.arabic,
-      ayah.text?.ar,
-      ayah.text_ar,
-      data.arab,
-      data.text?.ar,
-    ),
-    translation: pickText(
-      ayah.translation,
-      ayah.text?.id,
-      ayah.terjemah,
-      ayah.id,
-      data.translation,
-      data.text?.id,
-    ),
-    meta: ayah.meta || data.meta || {},
-  };
-};
-
-const renderQuranAyah = (data) => {
-  if (!data) return "Data tidak tersedia.";
-  const ayah = normalizeAyahData(data);
-  const arab = ayah.arab || "-";
-  const translation = ayah.translation || "-";
-  return `
-    <div class="title">QS ${escapeHtml(ayah.surah_number)}:${escapeHtml(
-      ayah.ayah_number,
-    )}</div>
-    <div class="arab">${escapeHtml(arab)}</div>
-    <div class="translation">${escapeHtml(translation)}</div>
-    <div class="meta">
-      <span class="pill-inline">Juz: ${escapeHtml(ayah.meta?.juz ?? "-")}</span>
-      <span class="pill-inline">Page: ${escapeHtml(ayah.meta?.page ?? "-")}</span>
-      <span class="pill-inline">Ruku: ${escapeHtml(ayah.meta?.ruku ?? "-")}</span>
-    </div>
-  `;
-};
-
-const renderAyahList = (items) => {
-  if (!items || !items.length) return "Data tidak tersedia.";
-  return `
-    <div class="ayah-list">
-      ${items
-        .map((item, index) => {
-          const ayah = normalizeAyahData(item);
-          const arab = ayah.arab || "-";
-          const translation = ayah.translation || "-";
-          return `
-            <div class="ayah-item" data-index="${index}">
-              <div class="ayah-header">
-                <span>QS ${escapeHtml(ayah.surah_number)}:${escapeHtml(
-                  ayah.ayah_number,
-                )}</span>
-                <div class="ayah-actions">
-                  <button class="ayah-play" data-action="play" data-index="${index}">
-                    Putar
-                  </button>
-                </div>
-              </div>
-              <div class="arab">${escapeHtml(arab)}</div>
-              <div class="translation">${escapeHtml(translation)}</div>
-              <div class="meta">
-                <span class="pill-inline">Juz: ${escapeHtml(
-                  ayah.meta?.juz ?? "-",
-                )}</span>
-                <span class="pill-inline">Page: ${escapeHtml(
-                  ayah.meta?.page ?? "-",
-                )}</span>
-                <span class="pill-inline">Ruku: ${escapeHtml(
-                  ayah.meta?.ruku ?? "-",
-                )}</span>
-              </div>
-            </div>
-          `;
-        })
-        .join("")}
-    </div>
-  `;
-};
-
-const renderHadisDetail = (data) => {
-  if (!data) return "Data tidak tersedia.";
-  return `
-    <div class="title">Hadis #${escapeHtml(data.id)}</div>
-    <div class="arab">${escapeHtml(data.text?.ar || "")}</div>
-    <div class="translation">${escapeHtml(data.text?.id || "")}</div>
-    <div class="meta">
-      <span class="pill-inline">Grade: ${escapeHtml(data.grade ?? "-")}</span>
-      <span class="pill-inline">Takhrij: ${escapeHtml(data.takhrij ?? "-")}</span>
-    </div>
-  `;
-};
-
-const getAudioUrl = (value) => {
-  if (!value) return "";
-  if (typeof value === "string") return value;
-  if (Array.isArray(value)) {
-    const hit = value.find((item) => typeof item === "string");
-    return hit || "";
-  }
-  if (typeof value === "object") {
-    const values = Object.values(value);
-    for (const item of values) {
-      if (typeof item === "string") return item;
-      if (Array.isArray(item)) {
-        const hit = item.find((v) => typeof v === "string");
-        if (hit) return hit;
-      }
-    }
-  }
-  return "";
-};
-
-const applyAudio = (audioValue) => {
-  const audioEl = el("quran-audio");
-  const audioUrl = getAudioUrl(audioValue);
-  if (audioUrl) {
-    audioEl.src = audioUrl;
-    audioEl.style.display = "block";
-  } else {
-    audioEl.removeAttribute("src");
-    audioEl.style.display = "none";
-  }
-};
-
-const setActiveAyah = (index) => {
-  const container = el("quran-range-output");
-  if (!container) return;
-  container.querySelectorAll(".ayah-item").forEach((item) => {
-    item.classList.toggle("active", item.dataset.index === String(index));
-  });
-};
-
-const playAyahIndex = (index, auto = true) => {
-  const item = state.quranRange[index];
-  if (!item) return;
-  const audioUrl = getAudioUrl(item.audio_url || item.audio);
-  const ayah = normalizeAyahData(item);
-  state.quranIndex = index;
-  state.quranAuto = auto;
-  if (ayah.surah_number) el("quran-surah").value = ayah.surah_number;
-  if (ayah.ayah_number) el("quran-ayah").value = ayah.ayah_number;
-  applyAudio(audioUrl);
-  setActiveAyah(index);
-  if (audioUrl) {
-    el("quran-audio")
-      .play()
-      .catch(() => {});
-  }
-};
-
-const getCache = (key, ttlSeconds) => {
-  try {
-    const raw = localStorage.getItem(CACHE_PREFIX + key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (Date.now() - parsed.at > ttlSeconds * 1000) {
-      localStorage.removeItem(CACHE_PREFIX + key);
-      return null;
-    }
-    return parsed.data;
-  } catch {
-    return null;
-  }
-};
-
-const setCache = (key, data) => {
-  try {
-    localStorage.setItem(
-      CACHE_PREFIX + key,
-      JSON.stringify({ at: Date.now(), data }),
-    );
-  } catch {
-    // ignore storage errors
-  }
-};
-
-const fetchJson = async (path, options = {}) => {
-  const method = (options.method || "GET").toUpperCase();
-  const cacheSeconds = options.cacheSeconds ?? DEFAULT_CACHE_SECONDS;
-  const cacheKey = `${method}:${path}`;
-
-  if (method === "GET" && cacheSeconds > 0) {
-    const cached = getCache(cacheKey, cacheSeconds);
-    if (cached) return cached;
-  }
-
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { Accept: "application/json", ...(options.headers || {}) },
-    ...options,
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Request failed: ${res.status}`);
-  }
-  const data = await res.json();
-  if (method === "GET" && cacheSeconds > 0) {
-    setCache(cacheKey, data);
-  }
-  return data;
-};
+const quranForm = document.getElementById("quranForm");
+const quranResult = document.getElementById("quranResult");
+const quranBatch = document.getElementById("quranBatch");
+const hadisForm = document.getElementById("hadisForm");
+const hadisResult = document.getElementById("hadisResult");
+const hadisDetail = document.getElementById("hadisDetail");
+const themeToggle = document.getElementById("themeToggle");
+const surahSelectEl = document.getElementById("surahSelect");
+const ayahStartEl = document.getElementById("ayahStart");
+const ayahEndEl = document.getElementById("ayahEnd");
+const hadisPrev = document.getElementById("hadisPrev");
+const hadisNext = document.getElementById("hadisNext");
+const hadisPageInfo = document.getElementById("hadisPageInfo");
+const gregorianDateEl = document.getElementById("gregorianDate");
+const hijriDateEl = document.getElementById("hijriDate");
 
 const state = {
-  sholatLocations: [],
-  quranRange: [],
-  quranIndex: -1,
-  quranAuto: false,
+  theme: localStorage.getItem("theme") || "light",
+  hadisQuery: "",
+  hadisPage: 1,
+  hadisLimit: 10,
+  hadisTotalPages: 1,
+  batchPlaying: false,
+  batchQueue: [],
+  batchIndex: 0,
+  batchSurah: null,
+  autoAdvanceActive: false,
 };
 
-// Mode baca toggles
-el("quran-read-mode").addEventListener("click", () => {
-  el("quran-ayah-output").classList.toggle("reading-mode");
-  el("quran-range-output").classList.toggle("reading-mode");
+function setTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const isDark = theme === "dark";
+  themeToggle.textContent = isDark ? "Mode Terang" : "Mode Gelap";
+  themeToggle.setAttribute("aria-pressed", String(isDark));
+  localStorage.setItem("theme", theme);
+  state.theme = theme;
+}
+
+setTheme(state.theme);
+
+themeToggle.addEventListener("click", () => {
+  setTheme(state.theme === "dark" ? "light" : "dark");
 });
 
-const quranAudio = el("quran-audio");
-quranAudio.addEventListener("ended", () => {
-  if (!state.quranAuto) return;
-  playAyahIndex(state.quranIndex + 1, true);
+function renderTodayDates() {
+  const now = new Date();
+  const gregorian = new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(now);
+
+  const hijri = new Intl.DateTimeFormat("id-ID-u-ca-islamic", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(now);
+
+  if (gregorianDateEl) gregorianDateEl.textContent = gregorian;
+  if (hijriDateEl) hijriDateEl.textContent = hijri;
+}
+
+renderTodayDates();
+
+function renderLoading(target, text = "Memuat data...") {
+  target.innerHTML = `
+    <div class="skeleton">
+      <div class="skeleton-line large"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+    </div>
+  `;
+}
+
+function renderError(target, message) {
+  target.innerHTML = `<div class="empty">${message}</div>`;
+}
+
+function createAyatCard(data) {
+  const audio = data.audio_url
+    ? `<audio class="audio" controls src="${data.audio_url}"></audio>`
+    : `<div class="empty">Audio tidak tersedia.</div>`;
+
+  return `
+    <div class="ayah">
+      <div class="arabic">${data.arab}</div>
+      <div class="translation">${data.translation}</div>
+      ${audio}
+      <div class="meta">
+        <span>Surah ${data.surah_number}</span>
+        <span>Ayat ${data.ayah_number}</span>
+      </div>
+    </div>
+  `;
+}
+
+const surahOptions = [
+  { num: 1, name: "Al-Fatihah" },
+  { num: 2, name: "Al-Baqarah" },
+  { num: 3, name: "Ali 'Imran" },
+  { num: 4, name: "An-Nisa" },
+  { num: 5, name: "Al-Ma'idah" },
+  { num: 6, name: "Al-An'am" },
+  { num: 7, name: "Al-A'raf" },
+  { num: 8, name: "Al-Anfal" },
+  { num: 9, name: "At-Taubah" },
+  { num: 10, name: "Yunus" },
+  { num: 11, name: "Hud" },
+  { num: 12, name: "Yusuf" },
+  { num: 13, name: "Ar-Ra'd" },
+  { num: 14, name: "Ibrahim" },
+  { num: 15, name: "Al-Hijr" },
+  { num: 16, name: "An-Nahl" },
+  { num: 17, name: "Al-Isra" },
+  { num: 18, name: "Al-Kahf" },
+  { num: 19, name: "Maryam" },
+  { num: 20, name: "Taha" },
+  { num: 21, name: "Al-Anbiya" },
+  { num: 22, name: "Al-Hajj" },
+  { num: 23, name: "Al-Mu'minun" },
+  { num: 24, name: "An-Nur" },
+  { num: 25, name: "Al-Furqan" },
+  { num: 26, name: "Ash-Shu'ara" },
+  { num: 27, name: "An-Naml" },
+  { num: 28, name: "Al-Qasas" },
+  { num: 29, name: "Al-'Ankabut" },
+  { num: 30, name: "Ar-Rum" },
+  { num: 31, name: "Luqman" },
+  { num: 32, name: "As-Sajdah" },
+  { num: 33, name: "Al-Ahzab" },
+  { num: 34, name: "Saba" },
+  { num: 35, name: "Fatir" },
+  { num: 36, name: "Ya-Sin" },
+  { num: 37, name: "As-Saffat" },
+  { num: 38, name: "Sad" },
+  { num: 39, name: "Az-Zumar" },
+  { num: 40, name: "Ghafir" },
+  { num: 41, name: "Fussilat" },
+  { num: 42, name: "Ash-Shura" },
+  { num: 43, name: "Az-Zukhruf" },
+  { num: 44, name: "Ad-Dukhan" },
+  { num: 45, name: "Al-Jathiyah" },
+  { num: 46, name: "Al-Ahqaf" },
+  { num: 47, name: "Muhammad" },
+  { num: 48, name: "Al-Fath" },
+  { num: 49, name: "Al-Hujurat" },
+  { num: 50, name: "Qaf" },
+  { num: 51, name: "Adh-Dhariyat" },
+  { num: 52, name: "At-Tur" },
+  { num: 53, name: "An-Najm" },
+  { num: 54, name: "Al-Qamar" },
+  { num: 55, name: "Ar-Rahman" },
+  { num: 56, name: "Al-Waqi'ah" },
+  { num: 57, name: "Al-Hadid" },
+  { num: 58, name: "Al-Mujadilah" },
+  { num: 59, name: "Al-Hashr" },
+  { num: 60, name: "Al-Mumtahanah" },
+  { num: 61, name: "As-Saff" },
+  { num: 62, name: "Al-Jumu'ah" },
+  { num: 63, name: "Al-Munafiqun" },
+  { num: 64, name: "At-Taghabun" },
+  { num: 65, name: "At-Talaq" },
+  { num: 66, name: "At-Tahrim" },
+  { num: 67, name: "Al-Mulk" },
+  { num: 68, name: "Al-Qalam" },
+  { num: 69, name: "Al-Haqqah" },
+  { num: 70, name: "Al-Ma'arij" },
+  { num: 71, name: "Nuh" },
+  { num: 72, name: "Al-Jinn" },
+  { num: 73, name: "Al-Muzzammil" },
+  { num: 74, name: "Al-Muddaththir" },
+  { num: 75, name: "Al-Qiyamah" },
+  { num: 76, name: "Al-Insan" },
+  { num: 77, name: "Al-Mursalat" },
+  { num: 78, name: "An-Naba" },
+  { num: 79, name: "An-Nazi'at" },
+  { num: 80, name: "Abasa" },
+  { num: 81, name: "At-Takwir" },
+  { num: 82, name: "Al-Infitar" },
+  { num: 83, name: "Al-Mutaffifin" },
+  { num: 84, name: "Al-Inshiqaq" },
+  { num: 85, name: "Al-Buruj" },
+  { num: 86, name: "At-Tariq" },
+  { num: 87, name: "Al-A'la" },
+  { num: 88, name: "Al-Ghashiyah" },
+  { num: 89, name: "Al-Fajr" },
+  { num: 90, name: "Al-Balad" },
+  { num: 91, name: "Ash-Shams" },
+  { num: 92, name: "Al-Lail" },
+  { num: 93, name: "Ad-Duha" },
+  { num: 94, name: "Ash-Sharh" },
+  { num: 95, name: "At-Tin" },
+  { num: 96, name: "Al-'Alaq" },
+  { num: 97, name: "Al-Qadr" },
+  { num: 98, name: "Al-Bayyinah" },
+  { num: 99, name: "Az-Zalzalah" },
+  { num: 100, name: "Al-'Adiyat" },
+  { num: 101, name: "Al-Qari'ah" },
+  { num: 102, name: "At-Takathur" },
+  { num: 103, name: "Al-'Asr" },
+  { num: 104, name: "Al-Humazah" },
+  { num: 105, name: "Al-Fil" },
+  { num: 106, name: "Quraysh" },
+  { num: 107, name: "Al-Ma'un" },
+  { num: 108, name: "Al-Kawthar" },
+  { num: 109, name: "Al-Kafirun" },
+  { num: 110, name: "An-Nasr" },
+  { num: 111, name: "Al-Masad" },
+  { num: 112, name: "Al-Ikhlas" },
+  { num: 113, name: "Al-Falaq" },
+  { num: 114, name: "An-Nas" },
+];
+
+surahSelectEl.innerHTML = surahOptions
+  .map(
+    (surah) =>
+      `<option value="${surah.num}">${surah.num}. ${surah.name}</option>`,
+  )
+  .join("");
+
+const ayahCounts = [
+  7, 286, 200, 176, 120, 165, 206, 75, 129, 109, 123, 111, 43, 52, 99, 128, 111,
+  110, 98, 135, 112, 78, 118, 64, 77, 227, 93, 88, 69, 60, 34, 30, 73, 54, 45,
+  83, 182, 88, 75, 85, 54, 53, 89, 59, 37, 35, 38, 29, 18, 45, 60, 49, 62, 55,
+  78, 96, 29, 22, 24, 13, 14, 11, 11, 18, 12, 12, 30, 52, 52, 44, 28, 28, 20,
+  56, 40, 31, 50, 40, 46, 42, 29, 19, 36, 25, 22, 17, 19, 26, 30, 20, 15, 21,
+  11, 8, 8, 19, 5, 8, 8, 11, 11, 8, 3, 9, 5, 4, 7, 3, 6, 3, 5, 4, 5, 6,
+];
+
+function populateAyahSelects(count) {
+  const makeOptions = (label) =>
+    [
+      `<option value="" disabled selected>${label}</option>`,
+      ...Array.from(
+        { length: count },
+        (_, i) => `<option value="${i + 1}">${i + 1}</option>`,
+      ),
+    ].join("");
+
+  ayahStartEl.innerHTML = makeOptions("Mulai");
+  ayahEndEl.innerHTML = makeOptions("Sampai");
+}
+
+function updateAyahSelects() {
+  const surahNum = Number(surahSelectEl.value);
+  const count = ayahCounts[surahNum - 1] || 1;
+  populateAyahSelects(count);
+}
+
+updateAyahSelects();
+surahSelectEl.addEventListener("change", () => {
+  updateAyahSelects();
 });
 
-quranAudio.addEventListener("pause", () => {
-  if (!quranAudio.ended) state.quranAuto = false;
-});
+quranForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  stopAllAyahAudio();
+  const formData = new FormData(quranForm);
+  const surah = formData.get("surah");
+  const ayahStart = Number(formData.get("ayahStart"));
+  const ayahEnd = Number(formData.get("ayahEnd"));
 
-el("hadis-read-mode").addEventListener("click", () => {
-  el("hadis-output").classList.toggle("reading-mode");
-});
+  if (!surah || !ayahStart || !ayahEnd) {
+    renderError(quranResult, "Surat dan rentang ayat wajib diisi.");
+    return;
+  }
 
-// Night reading mode toggle (global)
-const nightToggle = el("night-reading-toggle");
-const NIGHT_KEY = "sm-night-reading";
-const applyNight = (enabled) => {
-  document.body.classList.toggle("night-reading", enabled);
-  nightToggle.textContent = enabled ? "Day Mode" : "Night Reading";
-};
+  renderLoading(quranResult);
 
-const savedNight = localStorage.getItem(NIGHT_KEY) === "1";
-applyNight(savedNight);
-
-nightToggle.addEventListener("click", () => {
-  const next = !document.body.classList.contains("night-reading");
-  applyNight(next);
-  localStorage.setItem(NIGHT_KEY, next ? "1" : "0");
-});
-
-// Sholat
-el("sholat-search").addEventListener("click", async () => {
-  const keyword = el("sholat-keyword").value.trim();
-  if (!keyword) return;
-  setLoading("sholat-results");
   try {
-    const data = await fetchJson(
-      `/sholat/kabkota/cari/${encodeURIComponent(keyword)}`,
-    );
-    state.sholatLocations = data.data || [];
-    if (!state.sholatLocations.length) {
-      setOutput("sholat-results", "Tidak ada hasil.");
+    const start = Math.min(ayahStart, ayahEnd);
+    const end = Math.max(ayahStart, ayahEnd);
+
+    if (start === end) {
+      const response = await fetch(`${API_BASE}/quran/${surah}/${start}`);
+      const json = await response.json();
+
+      if (!response.ok || !json.status) {
+        throw new Error(json.message || "Ayat tidak ditemukan.");
+      }
+
+      quranResult.innerHTML = createAyatCard(json.data);
+      quranBatch.innerHTML = "";
+      bindAutoAdvance();
       return;
     }
-    const list = state.sholatLocations
-      .map(
-        (loc) =>
-          `<div class="list-item"><span>${loc.lokasi}</span><button data-id="${loc.id}">Pilih</button></div>`,
-      )
-      .join("");
-    setList("sholat-results", list);
-    el("sholat-results")
-      .querySelectorAll("button[data-id]")
-      .forEach((btn) => {
-        btn.addEventListener("click", () => {
-          el("sholat-results").dataset.selectedId = btn.dataset.id;
-          el("sholat-results").dataset.selectedName =
-            btn.parentElement.querySelector("span").textContent;
-        });
-      });
-  } catch (err) {
-    setOutput("sholat-results", `Error: ${err.message}`);
-  }
-});
 
-el("sholat-load").addEventListener("click", async () => {
-  const period = el("sholat-period").value;
-  const id = el("sholat-results").dataset.selectedId;
-  const name = el("sholat-results").dataset.selectedName || "";
-  if (!id) {
-    setOutput("sholat-output", "Pilih lokasi dulu.");
-    return;
-  }
-  setLoading("sholat-output");
-  try {
-    const path =
-      period === "today"
-        ? `/sholat/jadwal/${id}/today`
-        : `/sholat/jadwal/${id}/${period}`;
-    const data = await fetchJson(path);
-    const header = `<div class="title">${escapeHtml(name)}</div>`;
-    const jadwal = data.data?.jadwal || data.data?.data?.jadwal || data.jadwal;
-    const body = renderJadwal(jadwal);
-    setHtml("sholat-output", `${header}${body}`);
-  } catch (err) {
-    setOutput("sholat-output", `Error: ${err.message}`);
-  }
-});
+    const ayahs = await fetchSurahAyahs(surah, 100);
+    const range = ayahs.filter(
+      (item) => item.ayah_number >= start && item.ayah_number <= end,
+    );
 
-// Kalender
-el("cal-today").addEventListener("click", async () => {
-  setLoading("cal-today-output");
-  try {
-    const data = await fetchJson("/cal/today", { cacheSeconds: 600 });
-    const d = data.data || data;
-    const html = `
-      <div class="title">${escapeHtml(d.hijr?.today || "")}</div>
-      <div class="meta">${escapeHtml(d.ce?.today || "")}</div>
-      ${renderKeyValue([
-        ["Metode", d.method],
-        ["Adjustment", d.adjustment],
-      ])}
-    `;
-    setHtml("cal-today-output", html);
-  } catch (err) {
-    setOutput("cal-today-output", `Error: ${err.message}`);
-  }
-});
-
-el("cal-ce").addEventListener("click", async () => {
-  const date = el("cal-ce-date").value.trim();
-  if (!date) return;
-  setLoading("cal-ce-output");
-  try {
-    const data = await fetchJson(`/cal/ce/${encodeURIComponent(date)}`);
-    const d = data.data || data;
-    const html = `
-      <div class="title">${escapeHtml(d.ce?.today || "")}</div>
-      <div class="meta">${escapeHtml(d.hijr?.today || "")}</div>
-      ${renderKeyValue([
-        ["Metode", d.method],
-        ["Adjustment", d.adjustment],
-      ])}
-    `;
-    setHtml("cal-ce-output", html);
-  } catch (err) {
-    setOutput("cal-ce-output", `Error: ${err.message}`);
-  }
-});
-
-el("cal-hijr").addEventListener("click", async () => {
-  const date = el("cal-hijr-date").value.trim();
-  if (!date) return;
-  setLoading("cal-hijr-output");
-  try {
-    const data = await fetchJson(`/cal/hijr/${encodeURIComponent(date)}`);
-    const d = data.data || data;
-    const html = `
-      <div class="title">${escapeHtml(d.hijr?.today || "")}</div>
-      <div class="meta">${escapeHtml(d.ce?.today || "")}</div>
-      ${renderKeyValue([
-        ["Metode", d.method],
-        ["Adjustment", d.adjustment],
-      ])}
-    `;
-    setHtml("cal-hijr-output", html);
-  } catch (err) {
-    setOutput("cal-hijr-output", `Error: ${err.message}`);
-  }
-});
-
-// Quran
-el("quran-load").addEventListener("click", async () => {
-  setLoading("quran-list");
-  try {
-    const data = await fetchJson("/quran", { cacheSeconds: 3600 });
-    const list = (data.data || [])
-      .map(
-        (s) =>
-          `<div class="list-item"><span>${s.number}. ${s.name_latin}</span><button data-surah="${s.number}">Buka</button></div>`,
-      )
-      .join("");
-    setList("quran-list", list || "Data kosong.");
-    el("quran-list")
-      .querySelectorAll("button[data-surah]")
-      .forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const surah = btn.dataset.surah;
-          el("quran-surah").value = surah;
-          setOutput("quran-ayah-output", "Memuat detail surah...");
-          const detail = await fetchJson(`/quran/${surah}`, {
-            cacheSeconds: 0,
-          });
-          const d = unwrapData(detail);
-          const html = `
-            <div class="title">${escapeHtml(d.name_latin || "")}</div>
-            <div class="meta">${escapeHtml(d.translation || "")} • ${escapeHtml(
-              d.revelation || "",
-            )}</div>
-            ${renderKeyValue([
-              ["Jumlah Ayat", d.number_of_ayahs],
-              [
-                "Audio Surah",
-                getAudioUrl(d.audio_url || d.audio) ? "Tersedia" : "Tidak",
-              ],
-            ])}
-          `;
-          setHtml("quran-ayah-output", html);
-          applyAudio(d.audio_url || d.audio);
-          if (d.number_of_ayahs) {
-            el("quran-ayah-from").value = "1";
-            el("quran-ayah-to").value = String(d.number_of_ayahs);
-          }
-        });
-      });
-  } catch (err) {
-    setOutput("quran-list", `Error: ${err.message}`);
-  }
-});
-
-el("quran-search").addEventListener("input", () => {
-  const query = el("quran-search").value.toLowerCase();
-  const items = el("quran-list").querySelectorAll(".list-item");
-  if (!items) return;
-  items.forEach((item) => {
-    const text = item.textContent.toLowerCase();
-    item.style.display = text.includes(query) ? "flex" : "none";
-  });
-});
-
-el("quran-ayah-load").addEventListener("click", async () => {
-  const surah = el("quran-surah").value.trim();
-  const ayah = el("quran-ayah").value.trim();
-  if (!surah || !ayah) return;
-  state.quranAuto = false;
-  setLoading("quran-ayah-output");
-  try {
-    const data = await fetchJson(`/quran/${surah}/${ayah}`, {
-      cacheSeconds: 0,
-    });
-    const ayahData = unwrapData(data);
-    setHtml("quran-ayah-output", renderQuranAyah(ayahData));
-    applyAudio(ayahData?.audio_url || ayahData?.audio);
-  } catch (err) {
-    setOutput("quran-ayah-output", `Error: ${err.message}`);
-  }
-});
-
-el("quran-ayah-range").addEventListener("click", async () => {
-  const surah = el("quran-surah").value.trim();
-  const fromRaw = el("quran-ayah-from").value.trim();
-  const toRaw = el("quran-ayah-to").value.trim();
-  if (!surah || !fromRaw || !toRaw) {
-    setOutput("quran-range-output", "Lengkapi surah dan range ayat.");
-    return;
-  }
-  let from = Number.parseInt(fromRaw, 10);
-  let to = Number.parseInt(toRaw, 10);
-  if (Number.isNaN(from) || Number.isNaN(to)) {
-    setOutput("quran-range-output", "Range ayat harus berupa angka.");
-    return;
-  }
-  if (from > to) [from, to] = [to, from];
-  setLoading("quran-range-output");
-  state.quranRange = [];
-  state.quranIndex = -1;
-  state.quranAuto = false;
-  try {
-    const requests = [];
-    for (let i = from; i <= to; i += 1) {
-      requests.push(
-        fetchJson(`/quran/${surah}/${i}`, {
-          cacheSeconds: 0,
-        }),
-      );
+    if (!range.length) {
+      throw new Error("Ayat tidak ditemukan.");
     }
-    const results = await Promise.all(requests);
-    const items = results.map((res) => unwrapData(res));
-    state.quranRange = items;
-    setHtml("quran-range-output", renderAyahList(items));
-    el("quran-range-output")
-      .querySelectorAll(".ayah-play")
-      .forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const index = Number(btn.dataset.index || "0");
-          playAyahIndex(index, true);
-        });
-      });
-  } catch (err) {
-    setOutput("quran-range-output", `Error: ${err.message}`);
+
+    quranResult.innerHTML = range
+      .map(
+        (item) => `
+        <div class="ayah">
+          <div class="arabic">${item.arab}</div>
+          <div class="translation">${item.translation}</div>
+          ${
+            item.audio_url
+              ? `<audio class="audio" controls src="${item.audio_url}"></audio>`
+              : `<div class="empty">Audio tidak tersedia.</div>`
+          }
+          <div class="meta">
+            <span>Surah ${item.surah_number}</span>
+            <span>Ayat ${item.ayah_number}</span>
+          </div>
+        </div>
+      `,
+      )
+      .join("");
+
+    const playable = range.filter((item) => item.audio_url);
+    quranBatch.innerHTML = "";
+    bindAutoAdvance();
+  } catch (error) {
+    renderError(quranResult, error.message || "Terjadi kesalahan.");
   }
 });
 
-// Hadis
-const renderHadisList = (items) => {
-  if (!items || !items.length) {
-    setOutput("hadis-list", "Tidak ada hasil.");
+async function fetchSurahAyahs(surah, limit = 100) {
+  const allAyahs = [];
+  let page = 1;
+  let total = 0;
+
+  while (true) {
+    const url = new URL(`${API_BASE}/quran/${surah}`);
+    url.searchParams.set("page", String(page));
+    url.searchParams.set("limit", String(limit));
+    const response = await fetch(url.toString());
+    const json = await response.json();
+
+    if (!response.ok || !json.status) {
+      throw new Error(json.message || "Surah tidak ditemukan.");
+    }
+
+    const ayahs = json.data?.ayahs || [];
+    allAyahs.push(...ayahs);
+
+    total = json.pagination?.total || ayahs.length;
+    if (allAyahs.length >= total || ayahs.length === 0) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return allAyahs;
+}
+
+function renderBatchPlayer() {
+  if (!state.batchQueue.length) {
+    quranBatch.innerHTML = `<div class="empty">Tidak ada audio untuk diputar.</div>`;
     return;
   }
-  setList(
-    "hadis-list",
-    items
-      .map(
-        (h) =>
-          `<div class="list-item"><span>${h.id} - ${h.text?.id || h.text}</span><button data-id="${h.id}">Detail</button></div>`,
-      )
-      .join(""),
-  );
-  el("hadis-list")
-    .querySelectorAll("button[data-id]")
-    .forEach((btn) => {
-      btn.addEventListener("click", () => {
-        el("hadis-id").value = btn.dataset.id;
-        el("hadis-detail").click();
-      });
+
+  const current = state.batchQueue[state.batchIndex];
+  quranBatch.innerHTML = `
+    <div class="batch-player">
+      <div class="arabic">${current.arab}</div>
+      <div class="translation">${current.translation}</div>
+      <div class="batch-progress">
+        Surat ${state.batchSurah} • Ayat ${current.ayah_number} • ${state.batchIndex + 1} / ${state.batchQueue.length}
+      </div>
+      <audio id="batchAudio" class="audio" controls src="${current.audio_url || ""}"></audio>
+      <div class="batch-controls">
+        <button class="btn primary" id="batchPlay">Play</button>
+        <button class="btn ghost" id="batchPause">Pause</button>
+        <button class="btn ghost" id="batchStop">Stop</button>
+      </div>
+    </div>
+  `;
+
+  const audioEl = document.getElementById("batchAudio");
+  const playBtn = document.getElementById("batchPlay");
+  const pauseBtn = document.getElementById("batchPause");
+  const stopBtn = document.getElementById("batchStop");
+
+  playBtn.addEventListener("click", () => audioEl.play());
+  pauseBtn.addEventListener("click", () => audioEl.pause());
+  stopBtn.addEventListener("click", () => {
+    audioEl.pause();
+    audioEl.currentTime = 0;
+  });
+
+  audioEl.addEventListener("ended", () => {
+    if (state.batchIndex < state.batchQueue.length - 1) {
+      state.batchIndex += 1;
+      renderBatchPlayer();
+      const nextAudio = document.getElementById("batchAudio");
+      nextAudio.play();
+    }
+  });
+}
+
+function stopAllAyahAudio() {
+  const audios = quranResult.querySelectorAll("audio");
+  audios.forEach((audio) => {
+    audio.pause();
+    audio.currentTime = 0;
+  });
+  state.autoAdvanceActive = false;
+}
+
+function bindAutoAdvance() {
+  const audios = Array.from(quranResult.querySelectorAll("audio"));
+  if (!audios.length) return;
+
+  const playNext = (startIndex) => {
+    for (let i = startIndex; i < audios.length; i += 1) {
+      const next = audios[i];
+      if (next && next.src) {
+        next
+          .play()
+          .then(() => {
+            state.autoAdvanceActive = true;
+          })
+          .catch(() => {
+            state.autoAdvanceActive = false;
+          });
+        return;
+      }
+    }
+  };
+
+  audios.forEach((audio, index) => {
+    audio.addEventListener("play", () => {
+      state.autoAdvanceActive = true;
+      audio.dataset.autoIndex = String(index);
     });
-};
 
-el("hadis-random").addEventListener("click", async () => {
-  setLoading("hadis-output");
+    audio.addEventListener("pause", () => {
+      if (!audio.ended) {
+        state.autoAdvanceActive = false;
+      }
+    });
+
+    audio.addEventListener("ended", () => {
+      if (!state.autoAdvanceActive) return;
+      playNext(index + 1);
+    });
+  });
+}
+
+quranResult.addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-play-all]");
+  if (!button) return;
+
+  const surah = button.dataset.playAll;
+  quranBatch.innerHTML = "";
+  renderLoading(quranBatch, "Memuat audio surat...");
+
   try {
-    const data = await fetchJson("/hadis/enc/random");
-    setHtml("hadis-output", renderHadisDetail(data.data || data));
-  } catch (err) {
-    setOutput("hadis-output", `Error: ${err.message}`);
+    const ayahs = await fetchSurahAyahs(surah, 100);
+    const playable = ayahs.filter((ayah) => ayah.audio_url);
+    if (!playable.length) {
+      renderError(quranBatch, "Audio tidak tersedia untuk surat ini.");
+      return;
+    }
+
+    state.batchQueue = playable;
+    state.batchIndex = 0;
+    state.batchSurah = surah;
+    renderBatchPlayer();
+  } catch (error) {
+    renderError(quranBatch, error.message || "Terjadi kesalahan.");
   }
 });
 
-el("hadis-search").addEventListener("click", async () => {
-  const keyword = el("hadis-keyword").value.trim();
-  if (!keyword) return;
-  setLoading("hadis-list");
-  try {
-    const data = await fetchJson(
-      `/hadis/enc/cari/${encodeURIComponent(keyword)}`,
-    );
-    renderHadisList(data.data?.hadis || data.data || []);
-  } catch (err) {
-    setOutput("hadis-list", `Error: ${err.message}`);
+function createHadisList(items) {
+  if (!items || items.length === 0) {
+    return `<div class="empty">Tidak ada hasil ditemukan.</div>`;
   }
-});
 
-el("hadis-explore").addEventListener("click", async () => {
-  const page = el("hadis-page").value.trim() || "1";
-  const limit = el("hadis-limit").value.trim() || "10";
-  setLoading("hadis-list");
-  try {
-    const data = await fetchJson(
-      `/hadis/enc/explore?page=${page}&limit=${limit}`,
-    );
-    renderHadisList(data.data?.hadis || []);
-  } catch (err) {
-    setOutput("hadis-list", `Error: ${err.message}`);
-  }
-});
+  const list = items
+    .map(
+      (item) => `
+      <div class="hadis-item">
+        <strong>ID Hadis #${item.id}</strong>
+        <p>${item.text || "Tidak ada ringkasan."}</p>
+        <button class="btn ghost" data-id="${item.id}">Lihat Detail</button>
+      </div>
+    `,
+    )
+    .join("");
 
-el("hadis-detail").addEventListener("click", async () => {
-  const id = el("hadis-id").value.trim();
+  return `<div class="hadis-list">${list}</div>`;
+}
+
+async function loadHadisDetail(id) {
   if (!id) return;
-  setLoading("hadis-output");
-  try {
-    const data = await fetchJson(`/hadis/enc/show/${id}`);
-    setHtml("hadis-output", renderHadisDetail(data.data || data));
-  } catch (err) {
-    setOutput("hadis-output", `Error: ${err.message}`);
-  }
-});
+  renderLoading(hadisDetail, "Memuat detail hadis...");
 
-el("hadis-prev").addEventListener("click", async () => {
-  const id = el("hadis-id").value.trim();
-  if (!id) return;
   try {
-    const data = await fetchJson(`/hadis/enc/prev/${id}`);
-    el("hadis-id").value = data.data?.id || "";
-    setHtml("hadis-output", renderHadisDetail(data.data || data));
-  } catch (err) {
-    setOutput("hadis-output", `Error: ${err.message}`);
-  }
-});
+    const response = await fetch(`${API_BASE}/hadis/enc/show/${id}`);
+    const json = await response.json();
 
-el("hadis-next").addEventListener("click", async () => {
-  const id = el("hadis-id").value.trim();
-  if (!id) return;
-  try {
-    const data = await fetchJson(`/hadis/enc/next/${id}`);
-    el("hadis-id").value = data.data?.id || "";
-    setHtml("hadis-output", renderHadisDetail(data.data || data));
-  } catch (err) {
-    setOutput("hadis-output", `Error: ${err.message}`);
-  }
-});
+    if (!response.ok || !json.status) {
+      throw new Error(json.message || "Detail hadis tidak ditemukan.");
+    }
 
-// Perawi
-el("perawi-browse").addEventListener("click", async () => {
-  const page = el("perawi-page").value.trim() || "1";
-  const limit = el("perawi-limit").value.trim() || "10";
-  setLoading("perawi-list");
-  try {
-    const data = await fetchJson(
-      `/hadist/perawi/browse?page=${page}&limit=${limit}`,
-    );
-    const items = data.data?.rawi || [];
-    setList(
-      "perawi-list",
-      items
-        .map(
-          (p) =>
-            `<div class="list-item"><span>${p.id} - ${p.name || "Tanpa nama"}</span><button data-id="${p.id}">Detail</button></div>`,
-        )
-        .join(""),
-    );
-    el("perawi-list")
-      .querySelectorAll("button[data-id]")
-      .forEach((btn) => {
-        btn.addEventListener("click", () => {
-          el("perawi-id").value = btn.dataset.id;
-          el("perawi-detail").click();
-        });
-      });
-  } catch (err) {
-    setOutput("perawi-list", `Error: ${err.message}`);
-  }
-});
-
-el("perawi-detail").addEventListener("click", async () => {
-  const id = el("perawi-id").value.trim();
-  if (!id) return;
-  setLoading("perawi-output");
-  try {
-    const data = await fetchJson(`/hadist/perawi/id/${id}`);
-    const d = data.data || data;
-    const html = `
-      <div class="title">${escapeHtml(d.name || "Perawi")}</div>
-      ${renderKeyValue([
-        ["ID", d.id],
-        ["Grade", d.grade || "-"],
-        ["Birth", d.birth_date_place || d.birth_date || "-"],
-        ["Death", d.death_date_place || d.death_date || "-"],
-        ["Teachers", d.teachers || "-"],
-        ["Students", d.students || "-"],
-      ])}
+    const data = json.data;
+    hadisDetail.innerHTML = `
+      <div class="ayah">
+        <div class="arabic">${data.text.ar}</div>
+        <div class="translation">${data.text.id}</div>
+        <div class="meta">
+          <span>ID ${data.id}</span>
+          <span>${data.grade || "Tanpa grade"}</span>
+        </div>
+      </div>
     `;
-    setHtml("perawi-output", html);
-  } catch (err) {
-    setOutput("perawi-output", `Error: ${err.message}`);
+  } catch (error) {
+    renderError(hadisDetail, error.message || "Terjadi kesalahan.");
+  }
+}
+
+function updateHadisPagination() {
+  hadisPageInfo.textContent = `Halaman ${state.hadisPage}${state.hadisTotalPages ? ` / ${state.hadisTotalPages}` : ""}`;
+  hadisPrev.disabled = state.hadisPage <= 1;
+  hadisNext.disabled = state.hadisTotalPages
+    ? state.hadisPage >= state.hadisTotalPages
+    : false;
+}
+
+async function fetchHadisPage(page = 1) {
+  if (!state.hadisQuery) return;
+  state.hadisPage = page;
+  updateHadisPagination();
+  renderLoading(hadisResult);
+
+  try {
+    const url = new URL(
+      `${API_BASE}/hadis/enc/cari/${encodeURIComponent(state.hadisQuery)}`,
+    );
+    url.searchParams.set("limit", String(state.hadisLimit));
+    url.searchParams.set("page", String(state.hadisPage));
+    const response = await fetch(url.toString());
+    const json = await response.json();
+
+    if (!response.ok || !json.status) {
+      throw new Error(json.message || "Hadis tidak ditemukan.");
+    }
+
+    const items = json.data.hadis || json.data;
+    hadisResult.innerHTML = createHadisList(items);
+    const paging = json.data.paging || json.data?.paging;
+    if (paging && paging.total_pages) {
+      state.hadisTotalPages = paging.total_pages;
+    } else {
+      state.hadisTotalPages =
+        Array.isArray(items) && items.length === state.hadisLimit
+          ? state.hadisPage + 1
+          : state.hadisPage;
+    }
+    updateHadisPagination();
+
+    const first = (items || [])[0];
+    if (first && first.id) {
+      loadHadisDetail(first.id);
+    }
+  } catch (error) {
+    renderError(hadisResult, error.message || "Terjadi kesalahan.");
+  }
+}
+
+hadisForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const formData = new FormData(hadisForm);
+  const keyword = formData.get("keyword").trim();
+  const limit = formData.get("limit") || 10;
+
+  if (keyword.length < 3) {
+    renderError(hadisResult, "Kata kunci minimal 3 karakter.");
+    return;
+  }
+
+  state.hadisQuery = keyword;
+  state.hadisLimit = Number(limit);
+  state.hadisPage = 1;
+  state.hadisTotalPages = 1;
+  updateHadisPagination();
+  fetchHadisPage(1);
+});
+
+hadisResult.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-id]");
+  if (!button) return;
+  loadHadisDetail(button.dataset.id);
+});
+
+hadisPrev.addEventListener("click", () => {
+  if (state.hadisPage > 1) {
+    fetchHadisPage(state.hadisPage - 1);
   }
 });
+
+hadisNext.addEventListener("click", () => {
+  fetchHadisPage(state.hadisPage + 1);
+});
+
+updateHadisPagination();

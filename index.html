@@ -1,267 +1,164 @@
 <!doctype html>
 <html lang="id">
     <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>SayaMuslim</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap"
-            rel="stylesheet"
-        />
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>ImoSlem — Quran & Hadis</title>
         <link rel="stylesheet" href="styles.css" />
     </head>
     <body>
+        <div class="bg-orb orb-1"></div>
+        <div class="bg-orb orb-2"></div>
+        <div class="bg-grid"></div>
+
         <header class="site-header">
             <div class="brand">
-                <div class="brand-mark">SM</div>
+                <div class="logo">IMS</div>
                 <div class="brand-text">
-                    <h1>SayaMuslim</h1>
-                    <p>Jadwal, kalender, Qur'an, hadis, perawi</p>
+                    <h1>ImoSlem</h1>
+                    <p>Quran & Hadis • API myQuran</p>
                 </div>
             </div>
-            <nav class="nav">
-                <a href="#sholat">Sholat</a>
-                <a href="#kalender">Kalender</a>
-                <a href="#quran">Al-Qur'an</a>
-                <a href="#hadis">Hadis</a>
-                <a href="#perawi">Perawi</a>
-            </nav>
-            <button id="night-reading-toggle" class="pill ghost">
-                Night Reading
-            </button>
+            <div class="header-actions">
+                <button
+                    id="themeToggle"
+                    class="btn ghost"
+                    type="button"
+                    aria-pressed="false"
+                >
+                    Mode Gelap
+                </button>
+            </div>
         </header>
 
         <main class="container">
-            <section class="hero landing">
-                <div class="hero-text">
-                    <h2>Semua kebutuhan ibadah dalam satu layar</h2>
-                    <p>
-                        Akses langsung ke data resmi API myQuran. Cepat, ringan,
-                        dan responsif untuk HP.
-                    </p>
-                    <div class="hero-actions">
-                        <a class="pill" href="#sholat">Mulai Jadwal Sholat</a>
-                        <a class="pill ghost" href="#quran">Buka Al-Qur'an</a>
-                    </div>
+            <section class="hero">
+                <div>
+                    <h2>Saya Mencintai Al-Qur'an dan Al-Hadits</h2>
+                    <p>Hidup Indah dan Bahagia</p>
                 </div>
                 <div class="hero-card">
-                    <div class="hero-card-title">Endpoint Base</div>
-                    <code>https://api.myquran.com/v3/</code>
-                    <div class="hero-card-note">
-                        Tanpa backend, langsung dari browser.
+                    <div class="date-card">
+                        <div class="date-label">Hari Ini</div>
+                        <div id="hijriDate" class="date-main">—</div>
+                        <div id="gregorianDate" class="date-sub">—</div>
                     </div>
                 </div>
             </section>
 
-            <section class="quick-grid">
-                <a href="#kalender" class="quick-card">
-                    <h4>Kalender Hijriah</h4>
-                    <p>Cek tanggal hari ini dan konversi cepat.</p>
-                </a>
-                <a href="#hadis" class="quick-card">
-                    <h4>Hadis Harian</h4>
-                    <p>Random dan eksplorasi hadis pilihan.</p>
-                </a>
-                <a href="#perawi" class="quick-card">
-                    <h4>Perawi</h4>
-                    <p>Browse perawi dan lihat detail.</p>
-                </a>
-            </section>
-
-            <section id="sholat" class="section">
-                <div class="section-header">
-                    <h3>Jadwal Sholat</h3>
-                    <p>
-                        Cari lokasi dan tampilkan jadwal hari ini / minggu /
-                        bulan.
-                    </p>
-                </div>
-                <div class="card">
-                    <div class="grid two">
-                        <div>
-                            <label>Keyword Lokasi</label>
-                            <div class="row">
-                                <input
-                                    id="sholat-keyword"
-                                    placeholder="Contoh: Kediri"
-                                />
-                                <button id="sholat-search">Cari</button>
+            <section class="grid">
+                <article class="card">
+                    <header class="card-header">
+                        <h3>Al-Qur'an</h3>
+                        <p>Baca dan Dengarkan</p>
+                    </header>
+                    <form id="quranForm" class="form">
+                        <label>
+                            Pilih Surat
+                            <select
+                                name="surah"
+                                id="surahSelect"
+                                required
+                            ></select>
+                        </label>
+                        <label>
+                            Ayat
+                            <div class="ayah-range">
+                                <select
+                                    name="ayahStart"
+                                    id="ayahStart"
+                                    required
+                                ></select>
+                                <select
+                                    name="ayahEnd"
+                                    id="ayahEnd"
+                                    required
+                                ></select>
                             </div>
-                            <div id="sholat-results" class="list"></div>
-                        </div>
-                        <div>
-                            <label>Jadwal</label>
-                            <div class="row">
-                                <select id="sholat-period">
-                                    <option value="today">Hari ini</option>
-                                    <option value="week">Minggu</option>
-                                    <option value="month">Bulan</option>
-                                </select>
-                                <button id="sholat-load">Muat</button>
-                            </div>
-                            <div id="sholat-output" class="output"></div>
+                        </label>
+                        <button class="btn primary" type="submit">
+                            Baca dan Dengar
+                        </button>
+                    </form>
+                    <div id="quranResult" class="result">
+                        <div class="empty">
+                            Belum ada hasil. Coba cari ayat.
                         </div>
                     </div>
-                </div>
+                    <div id="quranBatch" class="result"></div>
+                </article>
+
+                <article class="card">
+                    <header class="card-header">
+                        <h3>Al-Hadits</h3>
+                        <p>Cari berdasarkan kata kunci.</p>
+                    </header>
+                    <form id="hadisForm" class="form">
+                        <label>
+                            Kata Kunci
+                            <input
+                                name="keyword"
+                                type="text"
+                                minlength="3"
+                                placeholder="Contoh: niat"
+                                required
+                            />
+                        </label>
+                        <label>
+                            Limit
+                            <input
+                                name="limit"
+                                type="number"
+                                min="1"
+                                max="20"
+                                value="10"
+                            />
+                        </label>
+                        <button class="btn primary" type="submit">
+                            Cari Hadis
+                        </button>
+                    </form>
+                    <div class="pagination">
+                        <button id="hadisPrev" class="btn ghost" type="button">
+                            Sebelumnya
+                        </button>
+                        <span id="hadisPageInfo">Halaman 1</span>
+                        <button id="hadisNext" class="btn ghost" type="button">
+                            Berikutnya
+                        </button>
+                    </div>
+                    <div id="hadisResult" class="result">
+                        <div class="empty">
+                            Belum ada hasil. Coba cari hadis.
+                        </div>
+                    </div>
+                </article>
             </section>
 
-            <section id="kalender" class="section">
-                <div class="section-header">
-                    <h3>Kalender Hijriah</h3>
-                    <p>Info hari ini dan konversi tanggal CE ↔ Hijriah.</p>
-                </div>
-                <div class="grid two">
-                    <div class="card">
-                        <h4>Hari Ini</h4>
-                        <button id="cal-today">Ambil Tanggal</button>
-                        <div id="cal-today-output" class="output"></div>
+            <section class="detail">
+                <article class="card">
+                    <header class="card-header">
+                        <h3>Detail Hadis</h3>
+                        <p>
+                            Pilih salah satu hasil untuk melihat teks Arab dan
+                            terjemahan lengkap.
+                        </p>
+                    </header>
+                    <div id="hadisDetail" class="result">
+                        <div class="empty">Belum ada detail hadis.</div>
                     </div>
-                    <div class="card">
-                        <h4>Konversi</h4>
-                        <div class="stack">
-                            <div>
-                                <label>CE → Hijriah (YYYY-MM-DD)</label>
-                                <div class="row">
-                                    <input
-                                        id="cal-ce-date"
-                                        placeholder="2026-02-03"
-                                    />
-                                    <button id="cal-ce">Konversi</button>
-                                </div>
-                                <div id="cal-ce-output" class="output"></div>
-                            </div>
-                            <div>
-                                <label>Hijriah → CE (YYYY-MM-DD)</label>
-                                <div class="row">
-                                    <input
-                                        id="cal-hijr-date"
-                                        placeholder="1447-08-15"
-                                    />
-                                    <button id="cal-hijr">Konversi</button>
-                                </div>
-                                <div id="cal-hijr-output" class="output"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="quran" class="section">
-                <div class="section-header">
-                    <h3>Al-Qur'an</h3>
-                    <p>Daftar surah, detail ayat, terjemah, dan audio.</p>
-                </div>
-                <div class="grid two">
-                    <div class="card">
-                        <div class="row">
-                            <input
-                                id="quran-search"
-                                placeholder="Cari surah..."
-                            />
-                            <button id="quran-load">Muat Surah</button>
-                        </div>
-                        <div id="quran-list" class="list tall"></div>
-                    </div>
-                    <div class="card">
-                        <h4>Detail Ayat</h4>
-                        <div class="row">
-                            <input id="quran-surah" placeholder="Surah" />
-                            <input id="quran-ayah" placeholder="Ayah" />
-                            <button id="quran-ayah-load">Ambil</button>
-                        </div>
-                        <div class="row">
-                            <input
-                                id="quran-ayah-from"
-                                placeholder="Dari ayat"
-                            />
-                            <input
-                                id="quran-ayah-to"
-                                placeholder="Sampai ayat"
-                            />
-                            <button id="quran-ayah-range">Muat Range</button>
-                        </div>
-                        <div class="row">
-                            <button id="quran-read-mode" class="secondary">
-                                Mode Baca
-                            </button>
-                        </div>
-                        <div id="quran-ayah-output" class="output"></div>
-                        <div id="quran-range-output" class="output"></div>
-                        <audio id="quran-audio" controls class="audio"></audio>
-                    </div>
-                </div>
-            </section>
-
-            <section id="hadis" class="section">
-                <div class="section-header">
-                    <h3>Hadis</h3>
-                    <p>Random, eksplorasi, pencarian, dan detail hadis.</p>
-                </div>
-                <div class="grid two">
-                    <div class="card">
-                        <div class="row">
-                            <button id="hadis-random">Random</button>
-                            <input
-                                id="hadis-keyword"
-                                placeholder="Cari hadis..."
-                            />
-                            <button id="hadis-search">Cari</button>
-                        </div>
-                        <div class="row">
-                            <input id="hadis-page" placeholder="Page" />
-                            <input id="hadis-limit" placeholder="Limit" />
-                            <button id="hadis-explore">Explore</button>
-                        </div>
-                        <div id="hadis-list" class="list tall"></div>
-                    </div>
-                    <div class="card">
-                        <h4>Detail Hadis</h4>
-                        <div class="row">
-                            <input id="hadis-id" placeholder="ID Hadis" />
-                            <button id="hadis-detail">Ambil</button>
-                        </div>
-                        <div class="row">
-                            <button id="hadis-prev">Prev</button>
-                            <button id="hadis-next">Next</button>
-                            <button id="hadis-read-mode" class="secondary">
-                                Mode Baca
-                            </button>
-                        </div>
-                        <div id="hadis-output" class="output"></div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="perawi" class="section">
-                <div class="section-header">
-                    <h3>Perawi Hadis</h3>
-                    <p>Browse daftar perawi dan lihat detailnya.</p>
-                </div>
-                <div class="grid two">
-                    <div class="card">
-                        <div class="row">
-                            <input id="perawi-page" placeholder="Page" />
-                            <input id="perawi-limit" placeholder="Limit" />
-                            <button id="perawi-browse">Browse</button>
-                        </div>
-                        <div id="perawi-list" class="list tall"></div>
-                    </div>
-                    <div class="card">
-                        <h4>Detail Perawi</h4>
-                        <div class="row">
-                            <input id="perawi-id" placeholder="ID Perawi" />
-                            <button id="perawi-detail">Ambil</button>
-                        </div>
-                        <div id="perawi-output" class="output"></div>
-                    </div>
-                </div>
+                </article>
             </section>
         </main>
 
-        <footer class="footer">
-            <p>Data dari API myQuran — langsung dari browser.</p>
+        <footer class="site-footer">
+            <p>
+                Terimakasih
+                <a href="https://banghasan.com" target="_blank" rel="noopener"
+                    >banghasan.com</a
+                >, semoga Allah melimpahkan rahmat-Nya kepada kami dan engkau
+            </p>
+            <div class="footer-heart" aria-hidden="true">♥</div>
         </footer>
 
         <script src="app.js"></script>
