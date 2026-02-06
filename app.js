@@ -16,6 +16,8 @@ const hadisPageInfo = document.getElementById("hadisPageInfo");
 const gregorianDateEl = document.getElementById("gregorianDate");
 const hijriDateEl = document.getElementById("hijriDate");
 const readAllBtn = document.getElementById("readAllBtn");
+const mobileThemeToggle = document.getElementById("mobileThemeToggle");
+const mobileThemeIcon = document.getElementById("mobileThemeIcon");
 
 const state = {
   theme: localStorage.getItem("theme") || "light",
@@ -38,6 +40,7 @@ function setTheme(theme) {
 
   if (label) label.textContent = isDark ? "Mode Terang" : "Mode Gelap";
   if (icon) icon.textContent = isDark ? "☀️" : "🌙";
+  if (mobileThemeIcon) mobileThemeIcon.textContent = isDark ? "☀️" : "🌙";
 
   themeToggle.setAttribute("aria-pressed", String(isDark));
   localStorage.setItem("theme", theme);
@@ -48,6 +51,27 @@ setTheme(state.theme);
 
 themeToggle.addEventListener("click", () => {
   setTheme(state.theme === "dark" ? "light" : "dark");
+});
+
+if (mobileThemeToggle) {
+  mobileThemeToggle.addEventListener("click", () => {
+    setTheme(state.theme === "dark" ? "light" : "dark");
+  });
+}
+
+// Smooth scrolling for mobile nav
+document.querySelectorAll('.mobile-nav-item[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const targetId = this.getAttribute('href').substring(1);
+    const targetElement = document.getElementById(targetId);
+    if (targetElement) {
+      window.scrollTo({
+        top: targetElement.offsetTop - 20,
+        behavior: 'smooth'
+      });
+    }
+  });
 });
 
 function renderTodayDates() {

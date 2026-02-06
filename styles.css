@@ -545,6 +545,56 @@ select:focus {
     color: #d11f1f;
 }
 
+/* Mobile Bottom Navigation */
+.mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--glass-border);
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.2s var(--transition);
+}
+
+.mobile-nav-item:hover,
+.mobile-nav-item:focus {
+    color: var(--accent);
+}
+
+.mobile-nav-item svg {
+    color: var(--accent);
+    transition: transform 0.2s var(--transition);
+}
+
+.mobile-nav-item:active svg {
+    transform: scale(0.9);
+}
+
 @media (max-width: 700px) {
     .site-header {
         flex-direction: column;
@@ -553,5 +603,13 @@ select:focus {
 
     .hero-card {
         order: -1;
+    }
+
+    body {
+        padding-bottom: 80px;
+    }
+
+    .mobile-nav {
+        display: grid;
     }
 }
