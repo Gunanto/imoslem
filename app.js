@@ -15,6 +15,7 @@ const hadisNext = document.getElementById("hadisNext");
 const hadisPageInfo = document.getElementById("hadisPageInfo");
 const gregorianDateEl = document.getElementById("gregorianDate");
 const hijriDateEl = document.getElementById("hijriDate");
+const readAllBtn = document.getElementById("readAllBtn");
 
 const state = {
   theme: localStorage.getItem("theme") || "light",
@@ -629,3 +630,13 @@ hadisNext.addEventListener("click", () => {
 });
 
 updateHadisPagination();
+
+readAllBtn.addEventListener("click", () => {
+  const surahNum = Number(surahSelectEl.value);
+  const count = ayahCounts[surahNum - 1] || 1;
+
+  ayahStartEl.value = "1";
+  ayahEndEl.value = String(count);
+
+  quranForm.dispatchEvent(new Event("submit"));
+});

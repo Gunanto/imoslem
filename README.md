@@ -4,6 +4,7 @@ Web responsif bernuansa hijau tua dengan mode terang/gelap untuk membaca dan men
 
 ## Fitur
 - Pencarian ayat berdasarkan surat dan rentang ayat (Mulai–Sampai).
+- Tombol "Baca Semua" untuk memuat seluruh ayat dalam satu surat secara otomatis.
 - Teks Arab, terjemahan, dan audio per ayat.
 - Auto‑advance audio: lanjut ke ayat berikutnya saat audio selesai.
 - Pencarian Al‑Hadits dengan pagination dan detail teks Arab + terjemahan.
