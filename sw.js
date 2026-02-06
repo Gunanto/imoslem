@@ -1,4 +1,4 @@
-const CACHE_NAME = "imoslem-v2";
+const CACHE_NAME = "imoslem-v3";
 const ASSETS = [
     "./",
     "./index.html",
