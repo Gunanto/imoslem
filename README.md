@@ -2,6 +2,20 @@
 
 Web responsif bernuansa hijau tua dengan mode terang/gelap untuk membaca dan mendengarkan Al-Qur'an serta pencarian Al-Hadits. Data diambil dari `https://api.myquran.com/v3/`.
 
+## Preview
+
+### Desktop View
+<p align="center">
+  <img src="screenshots/desktop_light.png" width="400" alt="Desktop Light Mode">
+  <img src="screenshots/desktop_dark.png" width="400" alt="Desktop Dark Mode">
+</p>
+
+### Mobile View
+<p align="center">
+  <img src="screenshots/mobile_light.png" width="200" alt="Mobile Light Mode">
+  <img src="screenshots/mobile_dark.png" width="200" alt="Mobile Dark Mode">
+</p>
+
 ## Fitur
 - [Baru] **Mobile Bottom Navigation**: Navigasi cepat khusus HP dengan desain *Glassmorphism*.
 - [Baru] **PWA (Progressive Web App)**: Bisa diinstal di HP dan mendukung caching via Service Worker.
