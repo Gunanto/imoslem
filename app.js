@@ -527,7 +527,7 @@ function createHadisList(items) {
     .map(
       (item) => `
       <div class="hadis-item">
-        <strong>ID Hadis #${item.id}</strong>
+        <strong>ID Hadits #${item.id}</strong>
         <p>${item.text || "Tidak ada ringkasan."}</p>
         <button class="btn ghost" data-id="${item.id}">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
@@ -593,7 +593,7 @@ async function fetchHadisPage(page = 1) {
     const json = await response.json();
 
     if (!response.ok || !json.status) {
-      throw new Error(json.message || "Hadis tidak ditemukan.");
+      throw new Error(json.message || "Hadits tidak ditemukan.");
     }
 
     const items = json.data.hadis || json.data;
