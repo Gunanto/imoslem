@@ -4,6 +4,8 @@ Web responsif bernuansa hijau tua dengan mode terang/gelap untuk membaca dan men
 
 ## Preview
 
+**Lihat Full Tampilan di sini: [https://gunanto.github.io/imoslem/](https://gunanto.github.io/imoslem/)**
+
 ### Desktop View
 <p align="center">
   <img src="screenshots/desktop_light.png" width="400" alt="Desktop Light Mode">
