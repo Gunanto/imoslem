@@ -153,11 +153,21 @@
             <article id="ceramah-section" class="card">
                 <header class="card-header">
                     <h3>Ceramah</h3>
-                    <p>Humairoh Channel New • Update Terbaru</p>
+                    <p>Pilih Channel • Update Terbaru</p>
                 </header>
+                <form class="form" style="margin-bottom: 1rem;">
+                    <label>
+                        Pilih Channel
+                        <select name="ceramahChannel" id="ceramahChannelSelect">
+                            <option value="UUYziONbDZh-b3YA48PaNB3g">Humairoh Channel New</option>
+                            <option value="UUwx3rBb0MqAWOpiukBBj-gw">Jagatauhid</option>
+                        </select>
+                    </label>
+                </form>
                 <div class="video-container">
-                    <iframe src="https://www.youtube.com/embed/videoseries?list=UUYziONbDZh-b3YA48PaNB3g"
-                        title="Ceramah Humairoh Channel" frameborder="0"
+                    <iframe id="ceramahIframe"
+                        src="https://www.youtube.com/embed/videoseries?list=UUYziONbDZh-b3YA48PaNB3g"
+                        title="Ceramah Video" frameborder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowfullscreen>
                     </iframe>

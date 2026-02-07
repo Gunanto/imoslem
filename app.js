@@ -18,6 +18,8 @@ const hijriDateEl = document.getElementById("hijriDate");
 const readAllBtn = document.getElementById("readAllBtn");
 const mobileThemeToggle = document.getElementById("mobileThemeToggle");
 const mobileThemeIcon = document.getElementById("mobileThemeIcon");
+const ceramahChannelSelect = document.getElementById("ceramahChannelSelect");
+const ceramahIframe = document.getElementById("ceramahIframe");
 
 const state = {
   theme: localStorage.getItem("theme") || "light",
@@ -664,6 +666,21 @@ readAllBtn.addEventListener("click", () => {
 
   quranForm.dispatchEvent(new Event("submit"));
 });
+
+// Ceramah channel switching
+if (ceramahChannelSelect && ceramahIframe) {
+  // Load saved channel preference
+  const savedChannel = localStorage.getItem("ceramahChannel") || "UUYziONbDZh-b3YA48PaNB3g";
+  ceramahChannelSelect.value = savedChannel;
+  ceramahIframe.src = `https://www.youtube.com/embed/videoseries?list=${savedChannel}`;
+
+  // Handle channel change
+  ceramahChannelSelect.addEventListener("change", () => {
+    const selectedChannel = ceramahChannelSelect.value;
+    ceramahIframe.src = `https://www.youtube.com/embed/videoseries?list=${selectedChannel}`;
+    localStorage.setItem("ceramahChannel", selectedChannel);
+  });
+}
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
