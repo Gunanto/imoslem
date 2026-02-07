@@ -19,6 +19,7 @@ Web responsif bernuansa hijau tua dengan mode terang/gelap untuk membaca dan men
 </p>
 
 ## Fitur
+- [Baru] **Ceramah Video**: Pilih dan tonton ceramah dari dua channel YouTube (Humairoh Channel New & Jagatauhid) dengan playlist otomatis.
 - [Baru] **Mobile Bottom Navigation**: Navigasi cepat khusus HP dengan desain *Glassmorphism*.
 - [Baru] **PWA (Progressive Web App)**: Bisa diinstal di HP dan mendukung caching via Service Worker.
 - Pencarian ayat berdasarkan surat dan rentang ayat (Mulai–Sampai).
