@@ -62,35 +62,97 @@ if (mobileThemeToggle) {
 }
 
 // Smooth scrolling for mobile nav
-document.querySelectorAll('.mobile-nav-item[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
+document.querySelectorAll('.mobile-nav-item[href^="#"]').forEach((anchor) => {
+  anchor.addEventListener("click", function (e) {
     e.preventDefault();
-    const targetId = this.getAttribute('href').substring(1);
+    const targetId = this.getAttribute("href").substring(1);
     const targetElement = document.getElementById(targetId);
     if (targetElement) {
       window.scrollTo({
         top: targetElement.offsetTop - 20,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   });
 });
 
+const HIJRI_MONTHS_ID = [
+  "Muharam",
+  "Safar",
+  "Rabiulawal",
+  "Rabiulakhir",
+  "Jumadilawal",
+  "Jumadilakhir",
+  "Rajab",
+  "Syaban",
+  "Ramadhan",
+  "Syawal",
+  "Zulkaidah",
+  "Zulhijah",
+];
+
+function getLocalTimeZone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Jakarta";
+}
+
+function formatHijriDate(now) {
+  const timeZone = getLocalTimeZone();
+  const localeCandidates = [
+    "id-ID-u-ca-islamic-umalqura",
+    "id-ID-u-ca-islamic",
+    "en-US-u-ca-islamic-umalqura",
+    "en-US-u-ca-islamic",
+    "ar-SA-u-ca-islamic-umalqura",
+    "ar-SA-u-ca-islamic",
+  ];
+
+  let formatter = null;
+  for (const locale of localeCandidates) {
+    const supported = Intl.DateTimeFormat.supportedLocalesOf([locale]);
+    if (!supported.length) continue;
+    const candidate = new Intl.DateTimeFormat(locale, {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+      timeZone,
+    });
+    const calendar = candidate.resolvedOptions().calendar || "";
+    if (calendar.startsWith("islamic")) {
+      formatter = candidate;
+      break;
+    }
+  }
+
+  if (!formatter) return null;
+
+  const parts = formatter.formatToParts(now);
+  const day = parts.find((part) => part.type === "day")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const year = parts.find((part) => part.type === "year")?.value;
+  const weekday = new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    timeZone,
+  }).format(now);
+
+  const monthIndex = Number.parseInt(month, 10) - 1;
+  const monthName = HIJRI_MONTHS_ID[monthIndex];
+  if (!day || !monthName || !year) return null;
+
+  return `${weekday}, ${day.padStart(2, "0")} ${monthName} ${year} H`;
+}
+
 function renderTodayDates() {
   const now = new Date();
+  const timeZone = getLocalTimeZone();
   const gregorian = new Intl.DateTimeFormat("id-ID", {
     weekday: "long",
     day: "2-digit",
     month: "long",
     year: "numeric",
+    timeZone,
   }).format(now);
 
-  const hijri = new Intl.DateTimeFormat("id-ID-u-ca-islamic", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(now);
+  const hijri = formatHijriDate(now) || "Tanggal Hijriah tidak tersedia";
 
   if (gregorianDateEl) gregorianDateEl.textContent = gregorian;
   if (hijriDateEl) hijriDateEl.textContent = hijri;
@@ -341,9 +403,10 @@ quranForm.addEventListener("submit", async (event) => {
         <div class="ayah">
           <div class="arabic">${item.arab}</div>
           <div class="translation">${item.translation}</div>
-          ${item.audio_url
-            ? `<audio class="audio" controls src="${item.audio_url}"></audio>`
-            : `<div class="empty">Audio tidak tersedia.</div>`
+          ${
+            item.audio_url
+              ? `<audio class="audio" controls src="${item.audio_url}"></audio>`
+              : `<div class="empty">Audio tidak tersedia.</div>`
           }
           <div class="meta">
             <span>Surah ${item.surah_number}</span>
@@ -670,7 +733,8 @@ readAllBtn.addEventListener("click", () => {
 // Ceramah channel switching
 if (ceramahChannelSelect && ceramahIframe) {
   // Load saved channel preference
-  const savedChannel = localStorage.getItem("ceramahChannel") || "UUYziONbDZh-b3YA48PaNB3g";
+  const savedChannel =
+    localStorage.getItem("ceramahChannel") || "UUYziONbDZh-b3YA48PaNB3g";
   ceramahChannelSelect.value = savedChannel;
   ceramahIframe.src = `https://www.youtube.com/embed/videoseries?list=${savedChannel}`;
 
