@@ -12,8 +12,7 @@
     --accent-glow: rgba(16, 185, 129, 0.2);
     --ring: rgba(16, 185, 129, 0.25);
     --shadow:
-        0 4px 6px -1px rgba(0, 0, 0, 0.05),
-        0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 20px 25px -5px rgba(0, 0, 0, 0.05);
     --border: rgba(15, 70, 48, 0.08);
     --glass-bg: rgba(255, 255, 255, 0.7);
     --glass-border: rgba(255, 255, 255, 0.5);
@@ -34,8 +33,7 @@
     --accent-glow: rgba(52, 211, 153, 0.15);
     --ring: rgba(52, 211, 153, 0.25);
     --shadow:
-        0 10px 15px -3px rgba(0, 0, 0, 0.4),
-        0 25px 40px -5px rgba(0, 0, 0, 0.4);
+        0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 25px 40px -5px rgba(0, 0, 0, 0.4);
     --border: rgba(148, 163, 184, 0.1);
     --glass-bg: rgba(15, 23, 42, 0.7);
     --glass-border: rgba(255, 255, 255, 0.05);
@@ -51,14 +49,24 @@ body {
     font-family: "Space Grotesk", system-ui, sans-serif;
     background-color: var(--bg);
     background-image:
-        radial-gradient(circle at 0% 0%, var(--accent-glow) 0%, transparent 50%),
-        radial-gradient(circle at 100% 100%, var(--accent-glow) 0%, transparent 50%);
+        radial-gradient(
+            circle at 0% 0%,
+            var(--accent-glow) 0%,
+            transparent 50%
+        ),
+        radial-gradient(
+            circle at 100% 100%,
+            var(--accent-glow) 0%,
+            transparent 50%
+        );
     color: var(--text);
     min-height: 100vh;
     position: relative;
     line-height: 1.6;
     overflow-x: hidden;
-    transition: background-color 0.4s var(--transition), color 0.4s var(--transition);
+    transition:
+        background-color 0.4s var(--transition),
+        color 0.4s var(--transition);
 }
 
 .bg-orb {
@@ -90,9 +98,11 @@ body {
         linear-gradient(rgba(12, 81, 50, 0.06) 1px, transparent 1px),
         linear-gradient(90deg, rgba(12, 81, 50, 0.06) 1px, transparent 1px);
     background-size: 80px 80px;
-    mask-image: radial-gradient(circle at center,
-            rgba(0, 0, 0, 0.8),
-            transparent 70%);
+    mask-image: radial-gradient(
+        circle at center,
+        rgba(0, 0, 0, 0.8),
+        transparent 70%
+    );
     pointer-events: none;
     z-index: 0;
 }
@@ -207,6 +217,9 @@ body {
     padding: 32px;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow);
+    justify-self: center;
+    max-width: 420px;
+    width: 100%;
 }
 
 .date-card {
@@ -257,7 +270,9 @@ body {
     display: flex;
     flex-direction: column;
     gap: 24px;
-    transition: transform 0.3s var(--transition), box-shadow 0.3s var(--transition);
+    transition:
+        transform 0.3s var(--transition),
+        box-shadow 0.3s var(--transition);
 }
 
 .card:hover {
@@ -394,18 +409,22 @@ select:focus {
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(90deg,
-            transparent,
-            rgba(255, 255, 255, 0.08),
-            transparent);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.08),
+        transparent
+    );
     animation: shimmer 2s infinite;
 }
 
 [data-theme="dark"] .skeleton::after {
-    background: linear-gradient(90deg,
-            transparent,
-            rgba(255, 255, 255, 0.03),
-            transparent);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.03),
+        transparent
+    );
 }
 
 .skeleton-line {
