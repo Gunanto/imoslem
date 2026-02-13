@@ -254,6 +254,11 @@ body {
     font-weight: 700;
 }
 
+.date-weekday {
+    font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+    font-weight: 700;
+}
+
 .date-sub {
     font-size: clamp(1.2rem, 2.4vw, 1.8rem);
     color: var(--muted);

@@ -15,6 +15,7 @@ const hadisNext = document.getElementById("hadisNext");
 const hadisPageInfo = document.getElementById("hadisPageInfo");
 const gregorianDateEl = document.getElementById("gregorianDate");
 const hijriDateEl = document.getElementById("hijriDate");
+const weekdayDateEl = document.getElementById("weekdayDate");
 const readAllBtn = document.getElementById("readAllBtn");
 const mobileThemeToggle = document.getElementById("mobileThemeToggle");
 const mobileThemeIcon = document.getElementById("mobileThemeIcon");
@@ -129,23 +130,22 @@ function formatHijriDate(now) {
   const day = parts.find((part) => part.type === "day")?.value;
   const month = parts.find((part) => part.type === "month")?.value;
   const year = parts.find((part) => part.type === "year")?.value;
-  const weekday = new Intl.DateTimeFormat("id-ID", {
-    weekday: "long",
-    timeZone,
-  }).format(now);
 
   const monthIndex = Number.parseInt(month, 10) - 1;
   const monthName = HIJRI_MONTHS_ID[monthIndex];
   if (!day || !monthName || !year) return null;
 
-  return `${weekday}, ${day.padStart(2, "0")} ${monthName} ${year} H`;
+  return `${day.padStart(2, "0")} ${monthName} ${year} H`;
 }
 
 function renderTodayDates() {
   const now = new Date();
   const timeZone = getLocalTimeZone();
-  const gregorian = new Intl.DateTimeFormat("id-ID", {
+  const weekday = new Intl.DateTimeFormat("id-ID", {
     weekday: "long",
+    timeZone,
+  }).format(now);
+  const gregorian = new Intl.DateTimeFormat("id-ID", {
     day: "2-digit",
     month: "long",
     year: "numeric",
@@ -154,6 +154,7 @@ function renderTodayDates() {
 
   const hijri = formatHijriDate(now) || "Tanggal Hijriah tidak tersedia";
 
+  if (weekdayDateEl) weekdayDateEl.textContent = weekday;
   if (gregorianDateEl) gregorianDateEl.textContent = gregorian;
   if (hijriDateEl) hijriDateEl.textContent = hijri;
 }
