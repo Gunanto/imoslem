@@ -198,6 +198,19 @@ function createAyatCard(data) {
   `;
 }
 
+function createOpeningRecitationMarkup(surahNumber) {
+  if (surahNumber === 9) return "";
+
+  const taawudz = `<div class="opening-line">Audzubilahi minasy syaithonirrojim</div>`;
+  const basmalah = `<div class="opening-line">Bismillahirahmaanirrohim</div>`;
+
+  if (surahNumber === 1) {
+    return `<div class="opening-recitation">${taawudz}</div>`;
+  }
+
+  return `<div class="opening-recitation">${taawudz}${basmalah}</div>`;
+}
+
 const surahOptions = [
   { num: 1, name: "Al-Fatihah" },
   { num: 2, name: "Al-Baqarah" },
@@ -359,6 +372,8 @@ surahSelectEl.addEventListener("change", () => {
 quranForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   stopAllAyahAudio();
+  const isReadAllRequest = quranForm.dataset.readAllRequest === "1";
+  quranForm.dataset.readAllRequest = "0";
   const formData = new FormData(quranForm);
   const surah = formData.get("surah");
   const ayahStart = Number(formData.get("ayahStart"));
@@ -398,9 +413,16 @@ quranForm.addEventListener("submit", async (event) => {
       throw new Error("Ayat tidak ditemukan.");
     }
 
-    quranResult.innerHTML = range
-      .map(
-        (item) => `
+    const openingMarkup =
+      isReadAllRequest && start === 1
+        ? createOpeningRecitationMarkup(Number(surah))
+        : "";
+
+    quranResult.innerHTML =
+      openingMarkup +
+      range
+        .map(
+          (item) => `
         <div class="ayah">
           <div class="arabic">${item.arab}</div>
           <div class="translation">${item.translation}</div>
@@ -415,10 +437,8 @@ quranForm.addEventListener("submit", async (event) => {
           </div>
         </div>
       `,
-      )
-      .join("");
-
-    const playable = range.filter((item) => item.audio_url);
+        )
+        .join("");
     quranBatch.innerHTML = "";
     bindAutoAdvance();
   } catch (error) {
@@ -727,6 +747,7 @@ readAllBtn.addEventListener("click", () => {
 
   ayahStartEl.value = "1";
   ayahEndEl.value = String(count);
+  quranForm.dataset.readAllRequest = "1";
 
   quranForm.dispatchEvent(new Event("submit"));
 });

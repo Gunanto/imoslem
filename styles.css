@@ -437,6 +437,24 @@ select:focus {
     gap: 16px;
 }
 
+.opening-recitation {
+    border: 1px solid rgba(212, 160, 23, 0.35);
+    background: rgba(212, 160, 23, 0.1);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: grid;
+    gap: 6px;
+    text-align: center;
+    color: var(--accent-3);
+    font-weight: 700;
+}
+
+[data-theme="dark"] .opening-recitation {
+    border-color: rgba(242, 201, 76, 0.45);
+    background: rgba(242, 201, 76, 0.12);
+    color: #fde68a;
+}
+
 .empty {
     padding: 18px;
     border-radius: 16px;
