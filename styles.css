@@ -360,14 +360,14 @@ select:focus {
     color: var(--text);
 }
 
-.btn-read-all {
+.btn.ghost.btn-read-all {
     background: linear-gradient(135deg, #f7d25b, #d4a017);
     border: 1px solid #b8860b;
     color: #2f2200;
     box-shadow: 0 4px 12px rgba(184, 134, 11, 0.25);
 }
 
-.btn-read-all:hover {
+.btn.ghost.btn-read-all:hover {
     box-shadow: 0 8px 18px rgba(184, 134, 11, 0.32);
     filter: brightness(1.05);
 }
