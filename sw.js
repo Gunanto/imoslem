@@ -1,4 +1,4 @@
-const CACHE_NAME = "imoslem-v5";
+const CACHE_NAME = "imoslem-v6";
 const API_CACHE_NAME = "imoslem-api-v1";
 const ASSETS = [
   "./",
@@ -47,6 +47,12 @@ self.addEventListener("message", (event) => {
 // Fetch event: stale-while-revalidate for assets, network-first for API
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
+  const isSameOrigin = url.origin === self.location.origin;
+  const isCoreAsset =
+    isSameOrigin &&
+    (url.pathname.endsWith("/index.html") ||
+      url.pathname.endsWith("/app.js") ||
+      url.pathname.endsWith("/styles.css"));
 
   // Strategy for API calls: Network First
   if (url.hostname === "api.myquran.com") {
@@ -62,6 +68,21 @@ self.addEventListener("fetch", (event) => {
         .catch(() => {
           return caches.match(event.request);
         }),
+    );
+    return;
+  }
+
+  // Strategy for core app shell assets: Network First
+  if (isCoreAsset || event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, networkResponse.clone());
+          });
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request)),
     );
     return;
   }
