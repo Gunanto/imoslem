@@ -351,8 +351,17 @@ select:focus {
 #hadisForm input[name="keyword"],
 #hadisForm input[name="limit"],
 #ceramahChannelSelect {
-    border: 3px solid #d4a017;
-    box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.18);
+    border: 4px solid #d4a017 !important;
+    background:
+        linear-gradient(
+            0deg,
+            rgba(212, 160, 23, 0.08),
+            rgba(212, 160, 23, 0.08)
+        ),
+        var(--field-bg);
+    box-shadow:
+        0 0 0 4px rgba(212, 160, 23, 0.25),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
 }
 
 #surahSelect:focus,
@@ -361,10 +370,10 @@ select:focus {
 #hadisForm input[name="keyword"]:focus,
 #hadisForm input[name="limit"]:focus,
 #ceramahChannelSelect:focus {
-    border-color: #e6b93f;
+    border-color: #f2c94c !important;
     box-shadow:
-        0 0 0 5px rgba(212, 160, 23, 0.26),
-        0 8px 24px rgba(184, 134, 11, 0.22);
+        0 0 0 6px rgba(212, 160, 23, 0.34),
+        0 10px 28px rgba(184, 134, 11, 0.3) !important;
 }
 
 .btn {
