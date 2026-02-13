@@ -11,6 +11,11 @@
     --accent-3: #064e3b;
     --accent-glow: rgba(16, 185, 129, 0.2);
     --ring: rgba(16, 185, 129, 0.25);
+    --field-bg: #ffffff;
+    --field-border: #cbd5e1;
+    --field-text: #0f172a;
+    --field-focus-bg: #f8fffc;
+    --field-placeholder: #64748b;
     --shadow:
         0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 20px 25px -5px rgba(0, 0, 0, 0.05);
     --border: rgba(15, 70, 48, 0.08);
@@ -32,6 +37,11 @@
     --accent-3: #d1fae5;
     --accent-glow: rgba(52, 211, 153, 0.15);
     --ring: rgba(52, 211, 153, 0.25);
+    --field-bg: #111827;
+    --field-border: #334155;
+    --field-text: #f8fafc;
+    --field-focus-bg: #0f172a;
+    --field-placeholder: #94a3b8;
     --shadow:
         0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 25px 40px -5px rgba(0, 0, 0, 0.4);
     --border: rgba(148, 163, 184, 0.1);
@@ -313,20 +323,26 @@ input,
 select {
     padding: 14px 18px;
     border-radius: var(--radius-md);
-    border: 1.5px solid var(--border);
-    background: var(--bg);
-    color: var(--text);
+    border: 1.5px solid var(--field-border);
+    background: var(--field-bg);
+    color: var(--field-text);
     font-size: 1rem;
     font-family: inherit;
     transition: all 0.2s var(--transition);
+}
+
+input::placeholder {
+    color: var(--field-placeholder);
 }
 
 input:focus,
 select:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 4px var(--ring);
-    background: var(--bg-elev);
+    box-shadow:
+        0 0 0 4px var(--ring),
+        0 0 0 1px var(--accent);
+    background: var(--field-focus-bg);
 }
 
 .btn {
